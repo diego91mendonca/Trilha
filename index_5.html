@@ -84,6 +84,9 @@
   .note { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); text-align: center; padding: 10px 20px 4px; line-height: 1.5; }
 
   .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .header-brand { display: flex; align-items: center; gap: 10px; }
+  .brand-logo { border-radius: 9px; flex-shrink: 0; display: block; }
+  .brand-logo-lg { border-radius: 16px; margin-bottom: 16px; }
   .greeting-eyebrow { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 4px; }
   .greeting { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-height: 1.1; }
   .greeting em { font-style: italic; color: var(--lime); }
@@ -136,6 +139,10 @@
   .sat-date-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
   .sat-date-days { font-family: var(--font-mono); font-size: 12px; color: var(--lime); font-weight: 700; text-align: right; white-space: nowrap; padding-left: 10px; }
   .link-btn.outline { background: transparent; border: 1px solid var(--surface-border); color: var(--text-primary); }
+  .college-result-card { cursor: pointer; }
+  .college-result-card .link-btn.outline { display: block; text-align: center; }
+  .sat-cta-row { margin: 10px 0 18px; }
+  .sat-cta-row .ob-btn { text-decoration: none; display: block; text-align: center; box-sizing: border-box; }
 
   .deadline-scroll { display: flex; gap: 9px; overflow-x: auto; padding-bottom: 4px; margin: 0 -18px; padding-left: 18px; padding-right: 18px; }
   .deadline-card { flex: 0 0 auto; width: 152px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 13px; }
@@ -257,6 +264,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     <!-- Step 0: account (sign up / log in) -->
     <div id="ob-step-auth">
+      <img class="brand-logo-lg" src="data:image/png;base64,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" alt="Trilha" width="56" height="56">
       <div class="ob-eyebrow">Trilha</div>
       <div class="ob-title" id="authTitle">Criar sua conta</div>
       <div class="ob-body" id="authSubtitle">Sua conta guarda sua trilha, checklist e estudos — e funciona em qualquer aparelho.</div>
@@ -336,9 +344,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   <div class="screen">
 
     <div class="header">
-      <div>
-        <div class="greeting-eyebrow" id="dateLabel"></div>
-        <div class="greeting">Bora, <em id="greetingName">estudante</em></div>
+      <div class="header-brand">
+        <img class="brand-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAGdklEQVR4nO3dPZIbNxCGYVCl1Jnt0Fsb7wF8C9/Ep9FNfAsdwLGKCk1mOoCdeFjD4QCDn26gB/0+mUq73Am+D8AMSPASjPn5l7d/R18D9Nxv18voa1gbejGEHSGMLUX3P0zokdK7DN3+GMFHiV5FUP8jBB8ttIug9uIEH5K0iiD+ogQfmqSL8EnyxQg/tElnTKRNBB8jSMwGzTMA4ccoEtlrKgDhx2itGawuAOGHFS1ZrCoA4Yc1tZksLgDhh1U12SwqAOGHdaUZzS4A4cdZlGQ1qwCEH2eTm9nDAhB+nFVOdkXfCgGcTbIAjP44u6MMRwtA+DGLVJZZAsG13QIw+mM2sUwzA8C1lwIw+mNWe9lmBoBrTwVg9MfsthlnBoBrjwIw+sOLddaZAeAaBYBrlxBY/qDc2/tH8v+v3/7udCX17rfr5fPoi8C5HAV/+3PWi0ABkCU3+LHfs1oECoBDsfDHQr3382/vHyZLwD0AkrZhLg1x6+9rut+ulwvhR4xUeC2XgAJg1zq0UoHVeM1W7APgRe0Nr7W/kYMCIElypLYy6q9RADzRXqasX9PCLEAB4BoFwMOIEXn0LEABsEtzvW7pXoACwDUKgCajlzCtKACqLeE/cwkoAKpsQ3/WElAAVNneyFq6sS1BAbArZ0RfQt/6DtGRKAAeakbx1pF/9MxBAeAaBcCT2Ht1pJYt1t4STQGQ9Pb+Ifa409Laf0EB8CI1MkuF2MLoHwKfCEPCXthrgmv5I5HMAFBlOfwhMAMgomQfIPd3rYU/BAqAHRo3qxbDHwIFQETscWVpOawGf0EBEJU6zW2Gw3FDoABwjqdAcI0CwOQObS8UwLkZPtXVggI4NsunulpQADyc5cmNJArglPW3KPRCARzyuNSJoQAOzfKBdgkUwKnaD7TPhp1guMYMANcowOS44U2jABPzvsubgwJMil3ePBTACe9Pe2IowITY5c1HASbDUqcMBZgMu7xlKMCE2OXNx07wYH/981vy///49XunK/GJAgxwFPoYyiCPAnRUG/ytpQipY0uQhwJ0IBX8rT9//ymEwFq/BTfByrTCH0IIX77+CCHw6LMFM4CinPAfreslXgNxFECJ9NMdnhbpoAAKUmFtDarma3vEPYAw7YCmXkPzfmNWFKATydGZkV4OBRAUG4E1Aht7TWaBMhRAmeZozUzQjgIIsTTyWroW6yiAoh4jNLNAGwoA1yiAgL0lR8+Ree9vsQzKQwHgGgWAaxQArlEAuEYB4BoFgGsUAK5RAAGjn8OP3oc4MwoA1yiAoh6zADu+bSiAEEtLDkvXYh0FUKY5QjP6t6MAgnp+Sqvnp89mRgE6kSwBI78cCiBM+9QGjkWRxblASjgY6xwogCKORrSPAjQ6OqJce71O+NtwD9Ag54uoORbFNmaASnuhPzqnX/oLMtCOAhSKjfYlX1LBVyTZQQEK1Iz6R3i6MxYFKLQuAV9NdH7cBBfiO3jnwgwA15gB4BoFiOCbF32gADtyNrgwBwqwsQ09JZjb59EXYIXEBhfOhwIEnQ0unANLoPAadsLvBwX4HxtcPrERBtdOcw8g9aaxow+wwBfzM0DpW4dTReCNbNgyW4DWD49si8CTHuwxeRMsfXwI4UeMuQJIHyBF+JFiqgAaJyh8+frj6d+EH2tmCqB5fMhSAsKPLRMF6HHW5XYmAEIwUgBglOEFGP1dWvBteAGAkYYWYMSIzCyANWYAuEYB4BoFgGsUAK5RALhGAeAaBYBrQwsw4ux7ztvHGjMAXBtegJ4jMqM/toYXABjJRAF6jMyM/thjogAh8H26GOPT/Xa9jL6IhUZQCT9i7rfrxcwMsJAMLOHHEXMFCEEmuIQfOcyeDboEWPJoRGDLbAEWuUUg+KjxuAG2ekYooGF5+GPyHgDohQLAtUcBLO0HAJrWWWcGgGtPBWAWwOy2GWcGgGsvBWAWwKz2ss0MANd2C8AsgNnEMs0MANeiBWAWwCxSWU7OAJQAZ3eUYZZAcO2wAMwCOKuc7GbNAJQAZ5Ob2ewlECXAWZRktegegBLAutKMFt8EUwJYVZPNqqdAlADW1Gay+jEoJYAVLVls2gegBBitNYPNG2GUAKNIZE80vBytgh4kB13Rt0IwG0CbdMbUAstsAElag6v6iE0R0EJ7VdFtyUIRUKLXcrr7mp0iIKX3feTQm1bKgBDGPjwx99SGUszN2pPC/wCf1IIUfwgwlwAAAABJRU5ErkJggg==" alt="Trilha" width="34" height="34">
+        <div>
+          <div class="greeting-eyebrow" id="dateLabel"></div>
+          <div class="greeting">Bora, <em id="greetingName">estudante</em></div>
+        </div>
       </div>
       <div class="streak-pill">🔥<span class="streak-count" id="streakCount">0</span></div>
     </div>
@@ -369,6 +380,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <button class="ob-btn" id="feedbackSubmitBtn" onclick="submitFeedback()">Enviar</button>
         <div class="ob-switch-link" onclick="closeFeedback()">Cancelar</div>
       </div>
+    </div>
+
+    <div class="feedback-overlay" id="collegeDetailOverlay" style="display:none">
+      <div class="feedback-panel" id="collegeDetailPanel"></div>
     </div>
 
     <div class="xp-row">
@@ -461,7 +476,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     <div class="view" id="view-sat">
       <div class="section-label">Datas do SAT 2026–27</div>
       <div id="satDatesBox"></div>
-      <div class="note" style="text-align:left; padding:10px 2px 0">Prova fora dos EUA (inclusive no Brasil): taxa de US$68 + taxa internacional de US$43 = US$111 no mínimo (pode ter taxa extra de local de prova). Inscrição e escolha de local de prova pelo app College Board Bluebook ou em <a href="https://satsuite.collegeboard.org/sat/registration/international-testing" target="_blank" rel="noopener" style="color:var(--lime)">satsuite.collegeboard.org</a> — escolas parceiras em SP, RJ e outras capitais costumam ser centro de prova. Fonte: College Board, verificado 2/set/2026.</div>
+      <div class="sat-cta-row">
+        <a class="ob-btn" href="https://satsuite.collegeboard.org/sat/registration/international-testing" target="_blank" rel="noopener" onclick="track('sat_registration_click', {})">Inscrever-se no SAT ↗</a>
+      </div>
+      <div class="note" style="text-align:left; padding:10px 2px 0">Prova fora dos EUA (inclusive no Brasil): taxa de US$68 + taxa internacional de US$43 = US$111 no mínimo (pode ter taxa extra de local de prova). A inscrição é feita direto no site do College Board acima, ou pelo app <strong>College Board Bluebook</strong> (necessário também para fazer a prova) — escolas parceiras em SP, RJ e outras capitais costumam ser centro de prova. Fonte: College Board, verificado 2/set/2026.</div>
 
       <div class="section-label" style="margin-top:26px">Buscar faculdades nos EUA</div>
       <div class="search-row">
@@ -610,7 +628,51 @@ const PROGRAMS_STATIC = [
 
   // ✓ OFICIAL — FGV campus Brasília, curso verificado via vestibular.fgv.br (22/ago/2026)
   {id:29, name:"Administração", inst:"FGV", state:"DF", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Brasília (EESP/EPGE-DF). Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]},
-  {id:30, name:"Administração Pública", inst:"FGV", state:"DF", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Brasília. Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]}
+  {id:30, name:"Administração Pública", inst:"FGV", state:"DF", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Brasília. Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]},
+
+  // ✓ OFICIAL (com ressalvas anotadas) — FAAP, domínio bloqueia fetch automatizado (403);
+  // dados cruzados via páginas de curso indexadas + agregadores que citam a FAAP diretamente.
+  {id:31, name:"Arquitetura e Urbanismo", inst:"FAAP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-06-13", deadlineLabel:"Fim das inscrições — Vestibular de Inverno", sourceUrl:"https://vestibular.faap.br/", tier:"example", verifiedNote:"faap.br e vestibular.faap.br bloquearam fetch automatizado (403) nesta verificação. Dados do ciclo mais recente confirmado (Vestibular de Inverno 2026, 2º semestre) via agregadores que citam números da própria FAAP: inscrições até 13/jun/2026, prova em 15/jun/2026 (36 questões + redação, 2h), resultado 18/jun/2026, taxa R$170. A FAAP também tem uma \"Prova Antecipada 2027\" para concluintes do ensino médio, mas as datas específicas desse ciclo não foram localizadas nesta verificação — confirme em faap.br antes de decidir.", altEntry:["ENEM — nota do Enem como forma de ingresso","IB / ABITUR / ACT / BAC / SAT — processos seletivos internacionais","Transferência Externa","ProUni","Segunda Graduação (portador de diploma)"]},
+  {id:32, name:"Design", inst:"FAAP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-06-13", deadlineLabel:"Fim das inscrições — Vestibular de Inverno", sourceUrl:"https://vestibular.faap.br/", tier:"example", verifiedNote:"Mesmo ciclo do Vestibular de Inverno FAAP 2026 (ver Arquitetura). faap.br bloqueou fetch direto (403) nesta verificação; taxa R$170, prova 15/jun/2026.", altEntry:["ENEM — nota do Enem como forma de ingresso","IB / ABITUR / ACT / BAC / SAT — processos seletivos internacionais","Transferência Externa","ProUni"]},
+  {id:33, name:"Publicidade e Propaganda", inst:"FAAP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-06-13", deadlineLabel:"Fim das inscrições — Vestibular de Inverno", sourceUrl:"https://vestibular.faap.br/", tier:"example", verifiedNote:"Curso confirmado em página própria indexada da FAAP. Ciclo/datas iguais aos demais cursos (inscrições até 13/jun/2026, prova 15/jun/2026, taxa R$170) — faap.br bloqueou fetch direto (403) nesta verificação.", altEntry:["ENEM — nota do Enem como forma de ingresso","IB / ABITUR / ACT / BAC / SAT — processos seletivos internacionais","Transferência Externa"]},
+  {id:34, name:"Direito", inst:"FAAP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-06-13", deadlineLabel:"Fim das inscrições — Vestibular de Inverno", sourceUrl:"https://vestibular.faap.br/", tier:"example", verifiedNote:"Ciclo/datas iguais aos demais cursos FAAP (ver Arquitetura). faap.br bloqueou fetch direto (403) nesta verificação; taxa R$170, prova 15/jun/2026, resultado 18/jun/2026.", altEntry:["ENEM — nota do Enem como forma de ingresso","IB / ABITUR / ACT / BAC / SAT — processos seletivos internacionais","Transferência Externa","Segunda Graduação (portador de diploma)"]},
+  {id:35, name:"Administração", inst:"FAAP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-06-13", deadlineLabel:"Fim das inscrições — Vestibular de Inverno", sourceUrl:"https://vestibular.faap.br/", tier:"example", verifiedNote:"Curso confirmado em página própria indexada da FAAP. Datas do ciclo mais recente (inscrições até 13/jun/2026, prova 15/jun/2026, taxa R$170) via agregadores — faap.br bloqueou fetch direto (403) nesta verificação.", altEntry:["ENEM — nota do Enem como forma de ingresso","IB / ABITUR / ACT / BAC / SAT — processos seletivos internacionais","Transferência Externa","ProUni"]},
+
+  // ✓ OFICIAL — Insper, edital 2027.1 hospedado no próprio domínio insper.edu.br
+  // (PDF bloqueado por robots.txt para fetch direto; conteúdo cruzado via resumo de terceiros que cita o edital)
+  {id:36, name:"Administração", inst:"Insper", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-09-17", deadlineLabel:"Fim das inscrições — Vestibular 2027.1", sourceUrl:"https://www.insper.edu.br/graduacao/vestibular/", tier:"official", verifiedNote:"Edital oficial \"Processo Seletivo 2027.1\" hospedado em insper.edu.br (entrada 1º semestre de 2027, aulas a partir de 15/fev/2027). Inscrições até 17/set/2026, prova em 11/out/2026 (cerca de 10 cidades), taxa R$380 (isenção para bolsa integral), resultado 17–20/nov/2026. 626 vagas no ciclo, somando todos os cursos. robots.txt bloqueou fetch direto do PDF nesta verificação — confirme em insper.edu.br/graduacao/vestibular antes de decidir.", altEntry:["ENEM — nota do Enem (edições 2024–2026)","SAT — SAT Suite of Assessments","IB — International Baccalaureate Diploma","Olimpíadas científicas (2023–2026)"]},
+  {id:37, name:"Economia", inst:"Insper", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-09-17", deadlineLabel:"Fim das inscrições — Vestibular 2027.1", sourceUrl:"https://www.insper.edu.br/graduacao/vestibular/", tier:"official", verifiedNote:"Mesmo edital 2027.1 (ver Administração). Curso listado explicitamente entre os do processo seletivo.", altEntry:["ENEM — nota do Enem (edições 2024–2026)","SAT — SAT Suite of Assessments","IB — International Baccalaureate Diploma","Olimpíadas científicas (2023–2026)"]},
+  {id:38, name:"Direito", inst:"Insper", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-09-17", deadlineLabel:"Fim das inscrições — Vestibular 2027.1", sourceUrl:"https://www.insper.edu.br/graduacao/vestibular/", tier:"official", verifiedNote:"Mesmo edital 2027.1 (ver Administração).", altEntry:["ENEM — nota do Enem (edições 2024–2026)","SAT — SAT Suite of Assessments","IB — International Baccalaureate Diploma","Olimpíadas científicas (2023–2026)"]},
+  {id:39, name:"Ciência da Computação", inst:"Insper", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-09-17", deadlineLabel:"Fim das inscrições — Vestibular 2027.1", sourceUrl:"https://www.insper.edu.br/graduacao/vestibular/", tier:"official", verifiedNote:"Mesmo edital 2027.1 (ver Administração). Curso listado explicitamente entre os do processo seletivo.", altEntry:["ENEM — nota do Enem (edições 2024–2026)","SAT — SAT Suite of Assessments","IB — International Baccalaureate Diploma","Olimpíadas científicas (2023–2026)"]},
+  {id:40, name:"Engenharia Mecânica", inst:"Insper", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-09-17", deadlineLabel:"Fim das inscrições — Vestibular 2027.1", sourceUrl:"https://www.insper.edu.br/graduacao/vestibular/", tier:"official", verifiedNote:"Mesmo edital 2027.1. O edital também lista Engenharia Mecatrônica, Engenharia da Computação e Engenharia de Produção como habilitações do mesmo processo.", altEntry:["ENEM — nota do Enem (edições 2024–2026)","SAT — SAT Suite of Assessments","IB — International Baccalaureate Diploma","Olimpíadas científicas (2023–2026)"]},
+
+  // Ibmec (unidade São Paulo) — edital 2027.1 ainda não publicado nesta verificação;
+  // datas usam o último ciclo confirmado (2026.2), sourceUrl aponta para a página oficial de vestibular.
+  {id:41, name:"Administração", inst:"Ibmec", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-06-22", deadlineLabel:"Fim das inscrições — Vestibular 2026.2", sourceUrl:"https://www.ibmec.br/estude-no-ibmec/formas-de-ingresso/vestibular", tier:"example", verifiedNote:"Edital do ciclo 2027.1 não foi localizado publicado nesta verificação — usando o último ciclo confirmado, 2026.2: inscrições até 22/jun/2026 (18h), provas em 26–27/jun/2026 (objetiva + redação + dinâmica de grupo, pode ser online), unidade SP entre as sedes de prova. Taxa em SP R$200, confirmada em blog oficial ibmec.br. Confirme edital vigente em ibmec.br antes de decidir.", altEntry:["ENEM — Graduação com nota do Enem","Transferência Externa","Obtenção de Novo Título (portador de diploma)","Fies","ProUni"]},
+  {id:42, name:"Direito", inst:"Ibmec", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-06-22", deadlineLabel:"Fim das inscrições — Vestibular 2026.2", sourceUrl:"https://www.ibmec.br/estude-no-ibmec/formas-de-ingresso/vestibular", tier:"example", verifiedNote:"Mesmo ciclo 2026.2 (ver Administração); edital 2027.1 não localizado nesta verificação. Curso confirmado na lista de graduação da unidade SP.", altEntry:["ENEM — Graduação com nota do Enem","Transferência Externa","Obtenção de Novo Título (portador de diploma)","Fies","ProUni"]},
+  {id:43, name:"Relações Internacionais", inst:"Ibmec", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-06-22", deadlineLabel:"Fim das inscrições — Vestibular 2026.2", sourceUrl:"https://www.ibmec.br/estude-no-ibmec/formas-de-ingresso/vestibular", tier:"example", verifiedNote:"Curso confirmado especificamente na lista de graduação da unidade SP. Ciclo/datas iguais aos demais cursos Ibmec SP; edital 2027.1 não localizado nesta verificação.", altEntry:["ENEM — Graduação com nota do Enem","Transferência Externa","Obtenção de Novo Título (portador de diploma)"]},
+  {id:44, name:"Ciência de Dados e Inteligência Artificial", inst:"Ibmec", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-06-22", deadlineLabel:"Fim das inscrições — Vestibular 2026.2", sourceUrl:"https://www.ibmec.br/estude-no-ibmec/formas-de-ingresso/vestibular", tier:"example", verifiedNote:"Nome oficial do curso \"tech\" confirmado na lista de graduação da unidade SP — não há curso chamado literalmente \"Ciência da Computação\" nessa unidade nesta verificação (há também Engenharia de Computação e Análise e Desenvolvimento de Sistemas).", altEntry:["ENEM — Graduação com nota do Enem","Transferência Externa","Obtenção de Novo Título (portador de diploma)"]},
+  {id:45, name:"Comunicação Social — Publicidade e Propaganda", inst:"Ibmec", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-06-22", deadlineLabel:"Fim das inscrições — Vestibular 2026.2", sourceUrl:"https://www.ibmec.br/estude-no-ibmec/formas-de-ingresso/vestibular", tier:"example", verifiedNote:"Curso confirmado especificamente na lista de graduação da unidade SP. Ciclo/datas iguais aos demais cursos Ibmec SP; edital 2027.1 não localizado nesta verificação.", altEntry:["ENEM — Graduação com nota do Enem","Transferência Externa","Obtenção de Novo Título (portador de diploma)"]},
+
+  // ✓ OFICIAL — ESPM São Paulo, edital 2027.1 verificado direto em espm.br
+  {id:46, name:"Publicidade e Propaganda", inst:"ESPM", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-11-29", deadlineLabel:"Prova do vestibular (presencial)", sourceUrl:"https://www.espm.br/cursos/graduacao/vestibular/vestibular-para-comunicacao-e-publicidade/", tier:"official", verifiedNote:"Vestibular 2027.1 (Comunicação Social — Publicidade e Propaganda): inscrições 19/ago–24/nov/2026, taxa R$300 (R$100 para ProUni/escola pública/isentos), entrevista online (30min) a partir de 28/set, prova presencial em 29/nov/2026 das 10h às 15h, resultado em 03/dez/2026. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM — 3 janelas de inscrição (19/ago–12/out; 20/out–23/nov; 24/nov/2026–18/jan/2027), nota mínima 580 geral / 600 na redação; aceita ABITUR, AP, BAC, IB, SAT e outros","ESPM Experience — entrevista online + prova, foco em criatividade","Transferência Externa / Portador de Diploma — inscrições até 08/jan/2027, prova de redação em 12/jan/2027"]},
+  {id:47, name:"Administração", inst:"ESPM", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-11-29", deadlineLabel:"Prova do vestibular (presencial)", sourceUrl:"https://www.espm.br/cursos/graduacao/vestibular/", tier:"official", verifiedNote:"Mesmo edital/calendário do Vestibular ESPM SP 2027.1 (curso diurno/noturno). Inscrições até 24/nov/2026 (taxa R$300, R$100 reduzida), prova em 29/nov/2026. Sem nota de corte publicada.", altEntry:["ENEM — mesmas 3 janelas do processo ENEM da ESPM, nota mínima 580/600 na redação","ESPM Experience","Transferência Externa / Portador de Diploma — inscrições até 08/jan/2027"]},
+  {id:48, name:"Jornalismo", inst:"ESPM", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-11-29", deadlineLabel:"Prova do vestibular (presencial)", sourceUrl:"https://www.espm.br/cursos/graduacao/vestibular/vestibular-para-jornalismo/", tier:"official", verifiedNote:"Página oficial confirma Jornalismo no Vestibular ESPM SP 2027.1, mesmo calendário: inscrições até 24/nov/2026 (taxa R$300/R$100), prova 29/nov/2026, resultado 03/dez/2026. Sem corte publicado.", altEntry:["ENEM — nota mínima 580 geral / 600 na redação, aceita IB/AP/BAC/SAT/ABITUR","ESPM Experience","Transferência Externa / Portador de Diploma"]},
+
+  // ✓ OFICIAL — PUC-Rio, edital 202612 (ingresso 2027) verificado direto em puc-rio.br
+  {id:49, name:"Direito", inst:"PUC-Rio", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-09-07", deadlineLabel:"Fim das inscrições do vestibular", sourceUrl:"https://www.puc-rio.br/vestibular/202612/", tier:"official", verifiedNote:"Vestibular PUC-Rio 202612 (ingresso 2027): inscrições 27/jul–07/set/2026, taxa R$200. Provas discursivas/redação em 11/out/2026, objetivas em 15/out/2026, resultado final 24/nov/2026, matrícula 24/nov–03/dez/2026. Seleção por classificação — Direito não exige entrevista (só Teologia exige).", altEntry:["ENEM 2022–2026 — nota pode substituir etapas do vestibular conforme edital","IB — Bacharelado Internacional, mínimo 30 pontos, resultados até 29/out/2026, válido só para 1ª opção de curso","Abitur, AP, Baccalauréat","Transferência Externa / Portador de Diploma — editais próprios por curso via CCAR"]},
+  {id:50, name:"Administração", inst:"PUC-Rio", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-09-07", deadlineLabel:"Fim das inscrições do vestibular", sourceUrl:"https://www.puc-rio.br/vestibular/202612/", tier:"official", verifiedNote:"Mesmo edital/calendário do Vestibular PUC-Rio 202612: inscrições até 07/set/2026 (taxa R$200), provas 11/out e 15/out/2026, resultado 24/nov/2026. Sem entrevista/portfólio.", altEntry:["ENEM 2022–2026","IB — mínimo 30 pontos, só para 1ª opção de curso","Abitur, AP, Baccalauréat","Transferência Externa / Portador de Diploma via CCAR"]},
+  {id:51, name:"Engenharia Civil", inst:"PUC-Rio", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-09-07", deadlineLabel:"Fim das inscrições do vestibular", sourceUrl:"https://www.puc-rio.br/vestibular/202612/", tier:"official", verifiedNote:"Engenharia (Civil e demais variantes — Elétrica, Mecânica, Computação, Ambiental, Produção, Química) integra o mesmo Vestibular PUC-Rio 202612. Inscrições até 07/set/2026, taxa R$200, provas 11/out e 15/out/2026. Sem entrevista/portfólio.", altEntry:["ENEM 2022–2026","IB — mínimo 30 pontos","Abitur, AP, Baccalauréat","Transferência Externa / Portador de Diploma via CCAR"]},
+  {id:52, name:"Psicologia", inst:"PUC-Rio", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-09-07", deadlineLabel:"Fim das inscrições do vestibular", sourceUrl:"https://www.puc-rio.br/vestibular/202612/", tier:"official", verifiedNote:"Psicologia integra o processo regular do Vestibular PUC-Rio 202612: inscrições até 07/set/2026 (R$200), provas 11/out e 15/out/2026, resultado 24/nov/2026. Sem entrevista/portfólio exigido.", altEntry:["ENEM 2022–2026","IB — mínimo 30 pontos","Abitur, AP, Baccalauréat","Transferência Externa / Portador de Diploma via CCAR"]},
+  {id:53, name:"Relações Internacionais", inst:"PUC-Rio", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-09-07", deadlineLabel:"Fim das inscrições do vestibular", sourceUrl:"https://www.iri.puc-rio.br/", tier:"official", verifiedNote:"Confirmado no site do IRI/PUC-Rio que o ingresso ocorre via Vestibular PUC-Rio regular, transferência, portador de diploma e aluno extraordinário. Mesmo calendário do vestibular 202612: inscrições até 07/set/2026, provas 11/out e 15/out/2026.", altEntry:["ENEM 2022–2026","IB — mínimo 30 pontos","Abitur, AP, Baccalauréat","Transferência Externa / Portador de Diploma / Aluno Extraordinário"]},
+
+  // ✓ OFICIAL — PUC Minas (Belo Horizonte), verificado direto em pucminas.br;
+  // data de fim de inscrição não totalmente confirmada (fontes divergem entre modalidades) — prova usada como âncora.
+  {id:54, name:"Direito", inst:"PUC Minas", state:"MG", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-25", deadlineLabel:"Prova presencial do vestibular", sourceUrl:"https://www.pucminas.br/vestibular/Paginas/default.aspx", tier:"official", verifiedNote:"Curso no Campus Coração Eucarístico (BH). Vestibular para ingresso em 2027: prova presencial em 25/out/2026 (sábado, 13h–17h), taxa R$65 (presencial) / R$35 (online ou ENEM); 90% das vagas por vestibular próprio, 10% por ENEM. Data exata de fim de inscrição não totalmente confirmada nesta verificação (~10/out presencial, ~24/out online/ENEM segundo fontes secundárias) — confirme em pucminas.br/vestibular. Sem nota de corte publicada.", altEntry:["ENEM — inscrição até ~24/out/2026, 10% das vagas, considera melhor resultado de edições recentes (janela exata não confirmada)","Prova online — mesma data-limite do ENEM","Transferência Externa / Portador de Diploma — edital próprio, calendário do ciclo 2027 não confirmado nesta verificação"]},
+  {id:55, name:"Medicina", inst:"PUC Minas", state:"MG", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-25", deadlineLabel:"Prova presencial do vestibular", sourceUrl:"https://www.pucminas.br/vestibular/Paginas/default.aspx", tier:"official", verifiedNote:"Medicina da PUC Minas NÃO fica no Campus Coração Eucarístico — é oferecida no Campus Betim (Região Metropolitana de BH, MG). Mesmo calendário geral do vestibular (prova 25/out/2026), mas com taxa específica mais alta, R$250. Confirme em pucminas.br/vestibular antes de decidir.", altEntry:["ENEM — 10% das vagas","Prova online — inscrição até ~24/out/2026","Transferência Externa / Portador de Diploma — condições específicas para Medicina não verificadas nesta passagem"]},
+  {id:56, name:"Engenharia Civil", inst:"PUC Minas", state:"MG", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-25", deadlineLabel:"Prova presencial do vestibular", sourceUrl:"https://www.pucminas.br/campus/coracao-eucaristico/ensino/graduacao/Paginas/Engenharia-Civil.aspx", tier:"official", verifiedNote:"Confirmado no Campus Coração Eucarístico (BH), junto com Elétrica, Mecânica, Computação, Controle e Automação e Energia. Mesmo calendário do vestibular geral: prova em 25/out/2026, taxa R$65 presencial / R$35 online-ENEM.", altEntry:["ENEM — 10% das vagas","Prova online","Transferência Externa / Portador de Diploma — edital próprio"]},
+  {id:57, name:"Administração", inst:"PUC Minas", state:"MG", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-25", deadlineLabel:"Prova presencial do vestibular", sourceUrl:"https://www.pucminas.br/campus/coracao-eucaristico/ensino/graduacao/Paginas/Administracao.aspx", tier:"official", verifiedNote:"Curso confirmado no Campus Coração Eucarístico (BH). Calendário geral do vestibular: prova em 25/out/2026, taxa R$65 (presencial) / R$35 (online/ENEM).", altEntry:["ENEM — 10% das vagas","Prova online","Transferência Externa / Portador de Diploma — edital próprio"]},
+  {id:58, name:"Psicologia", inst:"PUC Minas", state:"MG", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-25", deadlineLabel:"Prova presencial do vestibular", sourceUrl:"https://www.pucminas.br/campus/coracao-eucaristico/ensino/graduacao/Paginas/Psicologia.aspx", tier:"official", verifiedNote:"Curso confirmado no Campus Coração Eucarístico (BH). Calendário geral do vestibular: prova em 25/out/2026, taxa R$65 (presencial) / R$35 (online/ENEM).", altEntry:["ENEM — 10% das vagas","Prova online","Transferência Externa / Portador de Diploma — edital próprio"]}
 ];
 
 // ---------- BULK: real SISU 2026.1 microdata, ampla concorrência — ALL courses, 7151 cursos em 26 estados ----------
@@ -1332,6 +1394,8 @@ function renderSatDates() {
 const COLLEGE_SCORECARD_KEY = 'DEMO_KEY';
 const OWNERSHIP_LABEL = { 1: 'pública', 2: 'privada sem fins lucrativos', 3: 'privada com fins lucrativos' };
 
+let lastCollegeResults = []; // holds the most recent search results so the in-app detail view can look one up by index
+
 async function searchColleges() {
   const name = document.getElementById('collegeSearchInput').value.trim();
   const state = document.getElementById('collegeStateSelect').value;
@@ -1351,29 +1415,56 @@ async function searchColleges() {
     if (!res.ok) throw new Error('http ' + res.status);
     const data = await res.json();
     const results = data.results || [];
+    lastCollegeResults = results;
     if (!results.length) { box.innerHTML = '<div class="empty">Nenhuma faculdade encontrada.</div>'; return; }
-    box.innerHTML = results.map(r => {
-      const tuitionIn = r['latest.cost.tuition.in_state'];
-      const tuitionOut = r['latest.cost.tuition.out_of_state'];
+    box.innerHTML = results.map((r, idx) => {
       const rate = r['latest.admissions.admission_rate.overall'];
       const size = r['latest.student.size'];
       const own = OWNERSHIP_LABEL[r['school.ownership']] || '';
-      const url = r['school.school_url'] ? 'https://' + r['school.school_url'].replace(/^https?:\/\//, '') : '';
-      return `<div class="simulado-card">
+      return `<div class="simulado-card college-result-card" onclick="showCollegeDetail(${idx})">
         <span class="verify-badge verified">✓ oficial — College Scorecard</span>
         <div class="simulado-name" style="margin-top:8px">${r['school.name']}</div>
         <div class="simulado-desc">${r['school.city']}, ${r['school.state']}${own ? ' · ' + own : ''}${size ? ' · ' + size.toLocaleString('pt-BR') + ' alunos' : ''}</div>
         <div class="admin-row-meta">
           ${rate != null ? `<span class="tag">admissão ${Math.round(rate * 100)}%</span>` : ''}
-          ${tuitionIn != null ? `<span class="tag">in-state $${tuitionIn.toLocaleString('en-US')}</span>` : ''}
-          ${tuitionOut != null ? `<span class="tag">out-of-state $${tuitionOut.toLocaleString('en-US')}</span>` : ''}
         </div>
-        ${url ? `<a class="link-btn outline" href="${url}" target="_blank" rel="noopener">Site oficial ↗</a>` : ''}
+        <span class="link-btn outline" style="margin-top:10px">Ver detalhes</span>
       </div>`;
     }).join('');
   } catch (e) {
     box.innerHTML = '<div class="empty">Não foi possível buscar agora (a chave de demonstração da API tem limite baixo — tente de novo em alguns minutos).</div>';
   }
+}
+
+// ---------- COLLEGE DETAIL (in-app — doesn't redirect out until the student chooses to) ----------
+function showCollegeDetail(idx) {
+  const r = lastCollegeResults[idx];
+  if (!r) return;
+  const tuitionIn = r['latest.cost.tuition.in_state'];
+  const tuitionOut = r['latest.cost.tuition.out_of_state'];
+  const rate = r['latest.admissions.admission_rate.overall'];
+  const size = r['latest.student.size'];
+  const own = OWNERSHIP_LABEL[r['school.ownership']] || '';
+  const url = r['school.school_url'] ? 'https://' + r['school.school_url'].replace(/^https?:\/\//, '') : '';
+  track('sat_college_detail_view', { name: r['school.name'] });
+  document.getElementById('collegeDetailPanel').innerHTML = `
+    <div class="ob-eyebrow">College Scorecard</div>
+    <div class="ob-title" style="font-size:19px">${r['school.name']}</div>
+    <div class="ob-body">${r['school.city']}, ${r['school.state']}${own ? ' · ' + own : ''}</div>
+    <div class="admin-stat-grid" style="margin:14px 0">
+      ${rate != null ? `<div class="admin-stat-tile"><div class="admin-stat-num">${Math.round(rate * 100)}%</div><div class="admin-stat-label">Taxa de admissão</div></div>` : ''}
+      ${size != null ? `<div class="admin-stat-tile"><div class="admin-stat-num">${size.toLocaleString('pt-BR')}</div><div class="admin-stat-label">Alunos matriculados</div></div>` : ''}
+      ${tuitionIn != null ? `<div class="admin-stat-tile"><div class="admin-stat-num">$${tuitionIn.toLocaleString('en-US')}</div><div class="admin-stat-label">Mensalidade in-state / ano</div></div>` : ''}
+      ${tuitionOut != null ? `<div class="admin-stat-tile"><div class="admin-stat-num">$${tuitionOut.toLocaleString('en-US')}</div><div class="admin-stat-label">Mensalidade out-of-state / ano</div></div>` : ''}
+    </div>
+    <div class="ob-body" style="margin-bottom:14px">Dados oficiais do College Scorecard (U.S. Dept. of Education) — valores de matrícula são por ano letivo e não incluem moradia/alimentação. Para estudantes internacionais, a mensalidade cobrada costuma seguir a taxa "out-of-state".</div>
+    ${url ? `<a class="ob-btn" href="${url}" target="_blank" rel="noopener" style="display:block; text-align:center; text-decoration:none; box-sizing:border-box">Visitar site oficial ↗</a>` : ''}
+    <div class="ob-switch-link" onclick="closeCollegeDetail()">Fechar</div>
+  `;
+  document.getElementById('collegeDetailOverlay').style.display = 'flex';
+}
+function closeCollegeDetail() {
+  document.getElementById('collegeDetailOverlay').style.display = 'none';
 }
 
 // ---------- ONBOARDING / AGE-GATE (LGPD, §15 do doc) ----------

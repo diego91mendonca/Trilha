@@ -23,14 +23,22 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
-  body { background: var(--ink); font-family: var(--font-body); color: var(--text-primary); min-height: 100dvh; }
-  .app { width: 100%; max-width: 480px; margin: 0 auto; min-height: 100dvh; background: var(--ink); position: relative; display: flex; flex-direction: column; }
+  /* height (not min-height), plus overflow:hidden on body, is what actually makes the nav bar
+     stick — without it, tall views (7000+ cursos, for example) grow .app past the viewport and
+     the whole PAGE scrolls instead of just .screen, dragging the "sticky" nav along with it. */
+  /* height set twice on purpose: 100vh first as a fallback for browsers that don't support the
+     dvh unit (an unsupported value is invalid and gets ignored entirely, not rounded down to
+     the nearest supported unit — without this line, those browsers get no height constraint at
+     all here, which reproduces the exact "nav scrolls with the page" bug this block exists to
+     fix). 100dvh second, so it overrides 100vh wherever it IS supported. */
+  body { background: var(--ink); font-family: var(--font-body); color: var(--text-primary); height: 100vh; height: 100dvh; overflow: hidden; }
+  .app { width: 100%; max-width: 480px; margin: 0 auto; height: 100vh; height: 100dvh; background: var(--ink); position: relative; display: flex; flex-direction: column; }
   @media (min-width: 480px) {
     body { padding: 0; }
-    .app { min-height: 100dvh; box-shadow: 0 0 0 1px var(--surface-border); }
+    .app { height: 100vh; height: 100dvh; box-shadow: 0 0 0 1px var(--surface-border); }
   }
 
-  .onboarding-overlay { position: absolute; inset: 0; background: var(--ink); z-index: 50; display: flex; flex-direction: column; padding: 28px 22px; }
+  .onboarding-overlay { position: absolute; inset: 0; background: var(--ink); z-index: 50; display: flex; flex-direction: column; padding: 28px 22px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .onboarding-overlay.hidden { display: none; }
   .ob-eyebrow { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px; }
   .ob-title { font-family: var(--font-display); font-size: 22px; font-weight: 600; margin-bottom: 10px; line-height: 1.2; }
@@ -49,6 +57,9 @@
   .ob-restart-link { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); text-align: center; text-decoration: underline; cursor: pointer; margin-top: 6px; }
   .ob-switch-link { font-family: var(--font-mono); font-size: 11px; color: var(--lime); text-align: center; text-decoration: underline; cursor: pointer; margin-top: 16px; }
   .logout-link { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); text-decoration: underline; cursor: pointer; }
+  .feedback-overlay { position: absolute; inset: 0; background: rgba(20,21,31,0.92); z-index: 60; display: flex; align-items: flex-end; }
+  .feedback-panel { width: 100%; background: var(--ink); border-top: 1px solid var(--surface-border); border-radius: 20px 20px 0 0; padding: 24px 22px calc(24px + env(safe-area-inset-bottom)); max-height: 85vh; overflow-y: auto; }
+  .feedback-textarea { resize: vertical; font-family: var(--font-body); }
   .admin-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
   .admin-stat-tile { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 14px; padding: 14px; }
   .admin-stat-num { font-family: var(--font-display); font-size: 26px; color: var(--lime); }
@@ -57,6 +68,18 @@
   .admin-table th { text-align: left; font-family: var(--font-mono); font-size: 9.5px; text-transform: uppercase; color: var(--text-faint); padding: 6px 8px; border-bottom: 1px solid var(--surface-border); }
   .admin-table td { padding: 8px; border-bottom: 1px solid var(--surface-border); color: var(--text-primary); }
   .admin-loading { font-family: var(--font-mono); font-size: 12px; color: var(--text-faint); text-align: center; padding: 30px 0; }
+  .admin-action-btn { font-family: var(--font-mono); font-size: 9.5px; text-transform: uppercase; border: 1px solid var(--surface-border); background: transparent; border-radius: 8px; padding: 5px 7px; cursor: pointer; white-space: nowrap; }
+  .admin-action-btn.danger { color: var(--coral); border-color: rgba(255,97,84,0.4); }
+  .admin-action-btn + .admin-action-btn { margin-left: 6px; }
+  .admin-fb-msg { font-size: 12px; color: var(--text-primary); max-width: 220px; }
+  .admin-fb-type { font-family: var(--font-mono); font-size: 9.5px; text-transform: uppercase; color: var(--text-faint); }
+  .request-box { margin-top: 18px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 14px; padding: 14px; }
+  .request-collapsed { font-size: 13px; color: var(--text-muted); cursor: pointer; line-height: 1.4; }
+  .request-link { color: var(--lime); text-decoration: underline; white-space: nowrap; }
+  .request-form { margin-top: 4px; }
+  .request-msg { font-family: var(--font-mono); font-size: 11.5px; margin: 8px 0; }
+  .request-msg.ok { color: var(--lime); }
+  .request-msg.err { color: var(--coral); }
   .screen { padding: 20px 18px 8px; flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .note { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); text-align: center; padding: 10px 20px 4px; line-height: 1.5; }
 
@@ -107,6 +130,12 @@
 
   .link-btn { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; text-decoration: none; color: var(--ink); background: var(--lime); border-radius: 100px; padding: 7px 12px; margin-top: 12px; }
   .link-btn.outline { background: transparent; border: 1px solid var(--surface-border); color: var(--text-primary); }
+  .admin-row-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .sat-date-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 12px; padding: 11px 14px; margin-bottom: 7px; }
+  .sat-date-main { font-weight: 600; font-size: 13.5px; }
+  .sat-date-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
+  .sat-date-days { font-family: var(--font-mono); font-size: 12px; color: var(--lime); font-weight: 700; text-align: right; white-space: nowrap; padding-left: 10px; }
+  .link-btn.outline { background: transparent; border: 1px solid var(--surface-border); color: var(--text-primary); }
 
   .deadline-scroll { display: flex; gap: 9px; overflow-x: auto; padding-bottom: 4px; margin: 0 -18px; padding-left: 18px; padding-right: 18px; }
   .deadline-card { flex: 0 0 auto; width: 152px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 13px; }
@@ -140,6 +169,8 @@
   .verify-badge.thirdparty { background: rgba(124,158,255,0.15); color: #7C9EFF; border: 1px solid #4A63A8; }
   .verify-badge.example { background: transparent; color: var(--text-faint); border: 1px solid var(--surface-border); }
   .verified-note { font-size: 10.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.4; border-top: 1px solid var(--surface-border); padding-top: 8px; }
+  .alt-entry { font-size: 10.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+  .alt-entry-label { color: var(--lime); font-family: var(--font-mono); font-size: 9.5px; text-transform: uppercase; margin-right: 4px; }
   .add-btn { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; border: none; border-radius: 100px; padding: 7px 12px; cursor: pointer; white-space: nowrap; }
   .add-btn.add { background: var(--lime); color: var(--ink); }
   .add-btn.added { background: var(--surface-alt); color: var(--text-muted); border: 1px solid var(--surface-border); }
@@ -152,6 +183,9 @@
   .checkbox { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--surface-border); flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; }
   .checkbox.checked { background: var(--lime); border-color: var(--lime); color: var(--ink); font-weight: 700; }
   .check-label { font-size: 13px; flex: 1; }
+  .self-score-row { display: flex; align-items: center; gap: 8px; padding: 0 0 10px 28px; margin-top: -4px; }
+  .self-score-label { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-faint); text-transform: uppercase; white-space: nowrap; }
+  .self-score-input { width: 80px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 8px; padding: 6px 8px; color: var(--lime); font-family: var(--font-mono); font-size: 12px; text-align: center; }
   .check-label.done { color: var(--text-muted); text-decoration: line-through; }
 
   .study-cal { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 14px; margin-bottom: 6px; }
@@ -189,7 +223,7 @@
 
   .empty { font-size: 12.5px; color: var(--text-faint); text-align: center; padding: 20px 10px; }
 
-  .nav { display: flex; justify-content: space-around; padding: 12px 8px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--surface-border); margin-top: 20px; position: sticky; bottom: 0; background: var(--ink); flex-shrink: 0; }
+  .nav { display: flex; justify-content: space-around; padding: 12px 8px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--surface-border); position: sticky; bottom: 0; background: var(--ink); flex-shrink: 0; }
   .nav-item { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-faint); display: flex; flex-direction: column; align-items: center; gap: 5px; background: none; border: none; cursor: pointer; }
   .nav-item.active { color: var(--lime); }
   .nav-icon { width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid currentColor; }
@@ -229,6 +263,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="ob-field" id="authNameField">
         <label class="ob-label">Nome</label>
         <input type="text" class="ob-input" id="authName" placeholder="Seu nome">
+      </div>
+      <div class="ob-field" id="authSchoolField">
+        <label class="ob-label">Escola</label>
+        <input type="text" class="ob-input" id="authSchool" placeholder="Ex: Camino School">
       </div>
       <div class="ob-field">
         <label class="ob-label">E-mail</label>
@@ -304,7 +342,34 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       </div>
       <div class="streak-pill">🔥<span class="streak-count" id="streakCount">0</span></div>
     </div>
-    <div class="logout-link" id="logoutLink" style="display:none; text-align:right; margin-top:-6px; margin-bottom:8px;" onclick="authLogout()">Sair</div>
+    <div id="headerLinks" style="display:none; text-align:right; margin-top:-6px; margin-bottom:8px;">
+      <span class="logout-link" onclick="openFeedback()">Feedback</span>
+      <span class="logout-link" id="logoutLink" onclick="authLogout()" style="margin-left:14px">Sair</span>
+    </div>
+
+    <div class="feedback-overlay" id="feedbackOverlay" style="display:none">
+      <div class="feedback-panel">
+        <div class="ob-eyebrow">Trilha</div>
+        <div class="ob-title" style="font-size:19px">O que você quer contar pra gente?</div>
+        <div class="ob-body">Dúvida, problema técnico, coisa que falta — qualquer coisa. Vai direto pra quem cuida do app.</div>
+        <div class="ob-field">
+          <label class="ob-label">Tipo</label>
+          <select class="ob-input" id="feedbackType">
+            <option value="sugestao">Sugestão / algo que falta</option>
+            <option value="problema">Problema técnico / bug</option>
+            <option value="duvida">Dúvida</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+        <div class="ob-field">
+          <label class="ob-label">Mensagem</label>
+          <textarea class="ob-input feedback-textarea" id="feedbackMessage" placeholder="Conta pra gente..." rows="4"></textarea>
+        </div>
+        <div class="request-msg" id="feedbackMsg" style="display:none"></div>
+        <button class="ob-btn" id="feedbackSubmitBtn" onclick="submitFeedback()">Enviar</button>
+        <div class="ob-switch-link" onclick="closeFeedback()">Cancelar</div>
+      </div>
+    </div>
 
     <div class="xp-row">
       <span class="xp-level" id="levelLabel">NÍVEL 1</span>
@@ -342,6 +407,27 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         </select>
       </div>
       <div id="programList"></div>
+
+      <div class="request-box">
+        <div class="request-collapsed" id="requestCollapsed" onclick="toggleRequestForm()">Não encontrou a faculdade ou o curso que procurava? <span class="request-link">Peça pra gente adicionar →</span></div>
+        <div class="request-form" id="requestForm" style="display:none">
+          <div class="section-label" style="margin-top:0">Pedir uma faculdade ou curso</div>
+          <div class="ob-field">
+            <label class="ob-label">Faculdade</label>
+            <input type="text" class="ob-input" id="reqCollege" placeholder="Nome da faculdade">
+          </div>
+          <div class="ob-field">
+            <label class="ob-label">Curso (opcional)</label>
+            <input type="text" class="ob-input" id="reqCourse" placeholder="Ex: Engenharia, Direito...">
+          </div>
+          <div class="ob-field">
+            <label class="ob-label">Cidade/estado (opcional)</label>
+            <input type="text" class="ob-input" id="reqLocation" placeholder="Ex: São Paulo, SP">
+          </div>
+          <div class="request-msg" id="requestMsg" style="display:none"></div>
+          <button class="ob-btn" id="requestSubmitBtn" onclick="submitCollegeRequest()">Enviar pedido</button>
+        </div>
+      </div>
     </div>
 
     <!-- CHECKLIST -->
@@ -371,23 +457,57 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div id="simuladoBox"></div>
     </div>
 
+    <!-- SAT / EUA -->
+    <div class="view" id="view-sat">
+      <div class="section-label">Datas do SAT 2026–27</div>
+      <div id="satDatesBox"></div>
+      <div class="note" style="text-align:left; padding:10px 2px 0">Prova fora dos EUA (inclusive no Brasil): taxa de US$68 + taxa internacional de US$43 = US$111 no mínimo (pode ter taxa extra de local de prova). Inscrição e escolha de local de prova pelo app College Board Bluebook ou em <a href="https://satsuite.collegeboard.org/sat/registration/international-testing" target="_blank" rel="noopener" style="color:var(--lime)">satsuite.collegeboard.org</a> — escolas parceiras em SP, RJ e outras capitais costumam ser centro de prova. Fonte: College Board, verificado 2/set/2026.</div>
+
+      <div class="section-label" style="margin-top:26px">Buscar faculdades nos EUA</div>
+      <div class="search-row">
+        <input type="text" class="ob-input" id="collegeSearchInput" placeholder="Nome da faculdade..." onkeydown="if(event.key==='Enter')searchColleges()">
+      </div>
+      <div class="search-row">
+        <select class="ob-input" id="collegeStateSelect" style="margin-bottom:0">
+          <option value="">Qualquer estado</option>
+          <option value="CA">California</option>
+          <option value="NY">New York</option>
+          <option value="MA">Massachusetts</option>
+          <option value="TX">Texas</option>
+          <option value="FL">Florida</option>
+          <option value="IL">Illinois</option>
+          <option value="PA">Pennsylvania</option>
+          <option value="NC">North Carolina</option>
+          <option value="MI">Michigan</option>
+          <option value="OH">Ohio</option>
+        </select>
+        <button class="small-btn" onclick="searchColleges()" style="flex-shrink:0; padding:0 16px">Buscar</button>
+      </div>
+      <div id="collegeResultsBox"><div class="empty">Busque por nome ou estado — dados oficiais do College Scorecard (Dept. de Educação dos EUA).</div></div>
+    </div>
+
     <!-- ADMIN (only visible to role=admin accounts) -->
     <div class="view" id="view-admin">
       <div class="section-label">Painel — uso da turma</div>
       <div id="adminBox"><div class="admin-loading">Carregando...</div></div>
     </div>
 
-    <div class="nav">
-      <button class="nav-item active" data-view="inicio" onclick="switchView('inicio')"><div class="nav-icon"></div>Início</button>
-      <button class="nav-item" data-view="cursos" onclick="switchView('cursos')"><div class="nav-icon"></div>Cursos</button>
-      <button class="nav-item" data-view="checklist" onclick="switchView('checklist')"><div class="nav-icon"></div>Checklist</button>
-      <button class="nav-item" data-view="estudar" onclick="switchView('estudar')"><div class="nav-icon"></div>Estudar</button>
-      <button class="nav-item" data-view="simulados" onclick="switchView('simulados')"><div class="nav-icon"></div>Simulados</button>
-      <button class="nav-item" data-view="admin" id="adminNavItem" onclick="switchView('admin')" style="display:none"><div class="nav-icon"></div>Painel</button>
-    </div>
-
     <div class="note">Conta pessoal com login — sua trilha, checklist e estudos ficam salvos na sua conta, não só neste aparelho. Base SISU 2026.1 com todos os 7.151 cursos reais (ampla concorrência) em 26 estados — todo o arquivo de microdados do MEC, não mais uma amostra de cursos populares. Todos os prazos com data conhecida são calculados a partir de hoje, não fixos (reabrir isso daqui a 3 meses mostra a contagem certa). Três níveis de confiança nos dados: <strong>✓ oficial</strong> (edital ou microdados diretos do governo/instituição — Fuvest, ENEM, SISU via Portal Único/MEC), <strong>🔍 nota real (terceiros)</strong> (reservado para uso futuro), e <strong>dado de exemplo</strong> (não verificado, não usar para decisões reais — ainda é o caso de UNICAMP, PUC-SP, Mackenzie e FGV, que não têm dados no SISU por serem processos seletivos próprios ou privados). Para os cursos do SISU, o MEC ainda não publicou o edital 2027 — por isso a contagem de dias fica "aguardando edital" em vez de um número inventado.</div>
     <div class="ob-restart-link" onclick="obRestart()">↻ testar cadastro de novo (16+ ou menor de 16)</div>
+  </div>
+
+  <!-- Sibling of .screen, not nested inside it — this is what actually pins it. Living
+       inside .screen (as it did before) made it scroll with content no matter what
+       height/overflow rules were set on .app/body; position:sticky here is just a second
+       line of defense in case a future edit nests something above it awkwardly. -->
+  <div class="nav">
+    <button class="nav-item active" data-view="inicio" onclick="switchView('inicio')"><div class="nav-icon"></div>Início</button>
+    <button class="nav-item" data-view="cursos" onclick="switchView('cursos')"><div class="nav-icon"></div>Cursos</button>
+    <button class="nav-item" data-view="checklist" onclick="switchView('checklist')"><div class="nav-icon"></div>Checklist</button>
+    <button class="nav-item" data-view="estudar" onclick="switchView('estudar')"><div class="nav-icon"></div>Estudar</button>
+    <button class="nav-item" data-view="simulados" onclick="switchView('simulados')"><div class="nav-icon"></div>Simulados</button>
+    <button class="nav-item" data-view="sat" onclick="switchView('sat')"><div class="nav-icon"></div>SAT</button>
+    <button class="nav-item" data-view="admin" id="adminNavItem" onclick="switchView('admin')" style="display:none"><div class="nav-icon"></div>Painel</button>
   </div>
 </div>
 
@@ -412,11 +532,14 @@ const sb = (typeof window.supabase !== 'undefined' && window.supabase.createClie
 // examPhases on a program (1 = default/single test day, 2 = Fuvest/Comvest-style two-phase
 // exam) controls which shape a Vestibular checklist gets.
 function buildChecklistSteps(prog) {
+  // ENEM's gabarito (answer key) for each day is released within days of that day's exam —
+  // well before the TRI-based official result in January — so students self-correct per day,
+  // not once at the end. "Resultado" in a label is what triggers the self-score input below.
   if (prog.exam === 'SISU') {
-    return ["Inscrição no ENEM", "Estudar toda semana até a prova", "Prova do ENEM — Dia 1", "Prova do ENEM — Dia 2", "Resultado do ENEM", "Inscrição no SISU", "Resultado da chamada", "Envio de documentos", "Matrícula"];
+    return ["Inscrição no ENEM", "Estudar toda semana até a prova", "Prova do ENEM — Dia 1", "Resultado (autocorreção) — Dia 1", "Prova do ENEM — Dia 2", "Resultado (autocorreção) — Dia 2", "Resultado do ENEM", "Inscrição no SISU", "Resultado da chamada", "Envio de documentos", "Matrícula"];
   }
   if (prog.exam === 'ENEM_direto') {
-    return ["Estudar toda semana até o resultado do ENEM", "Prova do ENEM — Dia 1", "Prova do ENEM — Dia 2", "Envio da nota do ENEM", "Resultado", "Envio de documentos", "Matrícula"];
+    return ["Estudar toda semana até o resultado do ENEM", "Prova do ENEM — Dia 1", "Resultado (autocorreção) — Dia 1", "Prova do ENEM — Dia 2", "Resultado (autocorreção) — Dia 2", "Envio da nota do ENEM", "Resultado", "Envio de documentos", "Matrícula"];
   }
   // Vestibular (própria instituição)
   const steps = ["Inscrição no vestibular", "Pagamento da taxa de inscrição", "Estudar toda semana até a prova"];
@@ -453,41 +576,41 @@ const PROGRAMS_STATIC = [
   {id:2, name:"Engenharia de Computação", inst:"UNICAMP", state:"SP", type:"public", exam:"Vestibular", corte:710, examPhases:2, /* Comvest/Unicamp: well-known 2-phase vestibular, not re-verified this pass */ deadlineDate:"2026-09-14", deadlineLabel:"Prova do vestibular", sourceUrl:"https://www.comvest.unicamp.br/", tier:"example"},
 
   // ✓ OFICIAL — PUC-SP Vestibular de Verão, edital + Anexo I (Quadro de Vagas) verificados via NucVest
-  {id:6, name:"Direito (Matutino)", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:360, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (360 vagas) — confirme o quadro de vagas 2027 antes de decidir, mas a estrutura de cursos costuma se repetir. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — a PUC-SP não publica nota de corte."},
-  {id:7, name:"Administração (Matutino)", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:100, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (100 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada."},
-  {id:8, name:"Psicologia (Matutino/Vespertino)", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:100, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (100 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada."},
-  {id:9, name:"Ciências Econômicas (Matutino)", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:150, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (150 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada."},
-  {id:10, name:"Ciência da Computação", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:60, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (60 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada."},
-  {id:11, name:"Engenharia Civil", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:30, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (30 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada."},
-  {id:12, name:"Medicina", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:100, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Campus Sorocaba. Vagas do edital Verão 2026 (100 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada."},
-  {id:13, name:"Enfermagem", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:30, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Campus Sorocaba. Vagas do edital Verão 2026 (30 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada."},
-  {id:14, name:"Jornalismo (Matutino)", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:50, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (50 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada."},
-  {id:15, name:"Relações Internacionais (Matutino)", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:50, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (50 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada."},
+  {id:6, name:"Direito (Matutino)", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:360, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (360 vagas) — confirme o quadro de vagas 2027 antes de decidir, mas a estrutura de cursos costuma se repetir. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — a PUC-SP não publica nota de corte.", altEntry:["ENEM \u2014 Modalidade II ou Vestibular Complementar de Ver\u00e3o (conforme o curso)","IB \u2014 Baccalaureate Internacional","Portador de Diploma / Transfer\u00eancia"]},
+  {id:7, name:"Administração (Matutino)", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:100, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (100 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Modalidade II ou Vestibular Complementar de Ver\u00e3o (conforme o curso)","IB \u2014 Baccalaureate Internacional","Portador de Diploma / Transfer\u00eancia"]},
+  {id:8, name:"Psicologia (Matutino/Vespertino)", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:100, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (100 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Modalidade II ou Vestibular Complementar de Ver\u00e3o (conforme o curso)","IB \u2014 Baccalaureate Internacional","Portador de Diploma / Transfer\u00eancia"]},
+  {id:9, name:"Ciências Econômicas (Matutino)", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:150, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (150 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Modalidade II ou Vestibular Complementar de Ver\u00e3o (conforme o curso)","IB \u2014 Baccalaureate Internacional","Portador de Diploma / Transfer\u00eancia"]},
+  {id:10, name:"Ciência da Computação", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:60, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (60 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Modalidade II ou Vestibular Complementar de Ver\u00e3o (conforme o curso)","IB \u2014 Baccalaureate Internacional","Portador de Diploma / Transfer\u00eancia"]},
+  {id:11, name:"Engenharia Civil", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:30, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (30 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Modalidade II ou Vestibular Complementar de Ver\u00e3o (conforme o curso)","IB \u2014 Baccalaureate Internacional","Portador de Diploma / Transfer\u00eancia"]},
+  {id:12, name:"Medicina", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:100, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Campus Sorocaba. Vagas do edital Verão 2026 (100 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Modalidade II ou Vestibular Complementar de Ver\u00e3o (conforme o curso)","IB \u2014 Baccalaureate Internacional","Portador de Diploma / Transfer\u00eancia"]},
+  {id:13, name:"Enfermagem", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:30, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Campus Sorocaba. Vagas do edital Verão 2026 (30 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Modalidade II ou Vestibular Complementar de Ver\u00e3o (conforme o curso)","IB \u2014 Baccalaureate Internacional","Portador de Diploma / Transfer\u00eancia"]},
+  {id:14, name:"Jornalismo (Matutino)", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:50, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (50 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Modalidade II ou Vestibular Complementar de Ver\u00e3o (conforme o curso)","IB \u2014 Baccalaureate Internacional","Portador de Diploma / Transfer\u00eancia"]},
+  {id:15, name:"Relações Internacionais (Matutino)", inst:"PUC-SP", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:50, deadlineDate:"2026-10-02", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tier:"official", verifiedNote:"Vagas do edital Verão 2026 (50 vagas) — confirme o quadro de vagas 2027. Inscrições 6/ago–2/out/2026, prova 17/out/2026, taxa R$280. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Modalidade II ou Vestibular Complementar de Ver\u00e3o (conforme o curso)","IB \u2014 Baccalaureate Internacional","Portador de Diploma / Transfer\u00eancia"]},
 
-  {id:4, name:"Arquitetura", inst:"Mackenzie", state:"SP", type:"private", exam:"ENEM_direto", corte:600, deadlineDate:"2026-09-05", deadlineLabel:"Envio de nota ENEM", sourceUrl:"https://vestibular.mackenzie.br/", tier:"example"},
+  {id:4, name:"Arquitetura", inst:"Mackenzie", state:"SP", type:"private", exam:"ENEM_direto", corte:600, deadlineDate:"2026-09-05", deadlineLabel:"Envio de nota ENEM", sourceUrl:"https://vestibular.mackenzie.br/", tier:"example", altEntry:["ENEM \u2014 edital oficial do vestibular regular","Portador de Diploma / Transfer\u00eancia Externa"]},
 
   // ✓ OFICIAL — FGV Vestibular Unificado 2027, curso e datas verificados via vestibular.fgv.br
-  {id:16, name:"Direito", inst:"FGV", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://direitosp.fgv.br/graduacao/vestibular", tier:"official", verifiedNote:"Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas nesta verificação — checar vestibular.fgv.br antes de decidir. Seleção por classificação — a FGV não publica nota de corte."},
-  {id:17, name:"Administração de Empresas", inst:"FGV", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas nesta verificação — checar vestibular.fgv.br antes de decidir. Seleção por classificação — a FGV não publica nota de corte."},
-  {id:18, name:"Administração Pública", inst:"FGV", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas nesta verificação — checar vestibular.fgv.br antes de decidir. Seleção por classificação — a FGV não publica nota de corte."},
-  {id:19, name:"Economia", inst:"FGV", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas nesta verificação — checar vestibular.fgv.br antes de decidir. Seleção por classificação — a FGV não publica nota de corte."},
-  {id:20, name:"Relações Internacionais", inst:"FGV", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas nesta verificação — checar vestibular.fgv.br antes de decidir. Seleção por classificação — a FGV não publica nota de corte."},
+  {id:16, name:"Direito", inst:"FGV", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://direitosp.fgv.br/graduacao/vestibular", tier:"official", verifiedNote:"Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas nesta verificação — checar vestibular.fgv.br antes de decidir. Seleção por classificação — a FGV não publica nota de corte.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma","Entrevista em grupo \u2014 2\u00aa fase com discuss\u00e3o em grupo, em todas as vias de ingresso"]},
+  {id:17, name:"Administração de Empresas", inst:"FGV", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas nesta verificação — checar vestibular.fgv.br antes de decidir. Seleção por classificação — a FGV não publica nota de corte.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]},
+  {id:18, name:"Administração Pública", inst:"FGV", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas nesta verificação — checar vestibular.fgv.br antes de decidir. Seleção por classificação — a FGV não publica nota de corte.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]},
+  {id:19, name:"Economia", inst:"FGV", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas nesta verificação — checar vestibular.fgv.br antes de decidir. Seleção por classificação — a FGV não publica nota de corte.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]},
+  {id:20, name:"Relações Internacionais", inst:"FGV", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas nesta verificação — checar vestibular.fgv.br antes de decidir. Seleção por classificação — a FGV não publica nota de corte.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]},
 
   // ✓ OFICIAL — São Camilo Medicina, verificado via VUNESP (processadora oficial do processo seletivo)
-  {id:21, name:"Medicina", inst:"São Camilo", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:117, deadlineDate:"2026-11-05", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.vunesp.com.br/CUSC2602", tier:"official", verifiedNote:"Processo Seletivo de Medicina 1º semestre 2027, 117 vagas, inscrições 17/ago–5/nov/2026. Prova e taxa não confirmadas nesta verificação. Seleção por classificação — sem nota de corte publicada."},
+  {id:21, name:"Medicina", inst:"São Camilo", state:"SP", type:"private", exam:"Vestibular", corte:null, rankBased:true, vagas:117, deadlineDate:"2026-11-05", deadlineLabel:"Fim das inscrições", sourceUrl:"https://www.vunesp.com.br/CUSC2602", tier:"official", verifiedNote:"Processo Seletivo de Medicina 1º semestre 2027, 117 vagas, inscrições 17/ago–5/nov/2026. Prova e taxa não confirmadas nesta verificação. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 'Utilize sua nota do ENEM'","IB \u2014 aceito (exige CELPE-Bras se n\u00e3o estudou em portugu\u00eas)","Reda\u00e7\u00e3o Agendada / Aproveitamento de Resultado Anterior"]},
 
   // ✓ OFICIAL — FGV campus Rio de Janeiro, curso verificado via vestibular.fgv.br (22/ago/2026)
-  {id:22, name:"Administração", inst:"FGV", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Rio de Janeiro (EBAPE). Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada."},
-  {id:23, name:"Ciência de Dados e Inteligência Artificial", inst:"FGV", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Rio de Janeiro. Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada."},
-  {id:24, name:"Ciências Sociais", inst:"FGV", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Rio de Janeiro (CPDOC/ESS). Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada."},
-  {id:25, name:"Comunicação Digital", inst:"FGV", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Rio de Janeiro. Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada."},
-  {id:26, name:"Direito", inst:"FGV", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Rio de Janeiro (Direito Rio). Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada."},
-  {id:27, name:"Economia", inst:"FGV", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Rio de Janeiro (EPGE). Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada."},
-  {id:28, name:"Matemática Aplicada", inst:"FGV", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Rio de Janeiro (EMAp). Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada."},
+  {id:22, name:"Administração", inst:"FGV", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Rio de Janeiro (EBAPE). Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]},
+  {id:23, name:"Ciência de Dados e Inteligência Artificial", inst:"FGV", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Rio de Janeiro. Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]},
+  {id:24, name:"Ciências Sociais", inst:"FGV", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Rio de Janeiro (CPDOC/ESS). Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]},
+  {id:25, name:"Comunicação Digital", inst:"FGV", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Rio de Janeiro. Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]},
+  {id:26, name:"Direito", inst:"FGV", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Rio de Janeiro (Direito Rio). Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma","Entrevista em grupo \u2014 2\u00aa fase com discuss\u00e3o em grupo, em todas as vias de ingresso"]},
+  {id:27, name:"Economia", inst:"FGV", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Rio de Janeiro (EPGE). Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]},
+  {id:28, name:"Matemática Aplicada", inst:"FGV", state:"RJ", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Rio de Janeiro (EMAp). Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]},
 
   // ✓ OFICIAL — FGV campus Brasília, curso verificado via vestibular.fgv.br (22/ago/2026)
-  {id:29, name:"Administração", inst:"FGV", state:"DF", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Brasília (EESP/EPGE-DF). Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada."},
-  {id:30, name:"Administração Pública", inst:"FGV", state:"DF", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Brasília. Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada."}
+  {id:29, name:"Administração", inst:"FGV", state:"DF", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Brasília (EESP/EPGE-DF). Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]},
+  {id:30, name:"Administração Pública", inst:"FGV", state:"DF", type:"private", exam:"Vestibular", corte:null, rankBased:true, deadlineDate:"2026-10-18", deadlineLabel:"Prova do vestibular", sourceUrl:"https://vestibular.fgv.br/", tier:"official", verifiedNote:"Campus Brasília. Prova em 18–19/out/2026. Data de fim de inscrição e taxa não confirmadas — checar vestibular.fgv.br. Seleção por classificação — sem nota de corte publicada.", altEntry:["ENEM \u2014 Formas de Ingresso via ENEM (reda\u00e7\u00e3o em ingl\u00eas)","IB \u2014 Processo Seletivo Internacional (tamb\u00e9m aceita ABITUR, BAC, SAT)","Transfer\u00eancia Externa / Portador de Diploma"]}
 ];
 
 // ---------- BULK: real SISU 2026.1 microdata, ampla concorrência — ALL courses, 7151 cursos em 26 estados ----------
@@ -526,10 +649,10 @@ const SUBJECT_PRESETS = [
 // agrupava as três como se nenhuma tivesse, o que era impreciso para duas delas.
 const SIMULADO_RESOURCES = [
   {name:"INEP — Provas e gabaritos do ENEM", desc:"Todas as provas do ENEM desde 1998, com gabarito, direto da fonte oficial. Gratuito, sem cadastro.", url:"https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos", tag:"oficial"},
-  {name:"Fuvest — provas e simulados (USP)", desc:"A própria Fuvest publica provas anteriores e aplica simulados oficiais ao longo do ano.", url:"https://www.fuvest.br/", tag:"oficial"},
+  {name:"Fuvest — acervo de provas e gabaritos (USP)", desc:"Página direta do acervo: provas e gabaritos ano a ano, de 1979 a 2026 — link direto para os PDFs, não a página inicial.", url:"https://www.fuvest.br/acervo-vestibular/", tag:"oficial"},
   {name:"Comvest — provas anteriores (UNICAMP)", desc:"Provas comentadas de todos os anos e simulado online oficial da própria Comvest, gratuito.", url:"https://www.comvest.unicamp.br/vestibulares-anteriores/", tag:"oficial"},
   {name:"PUC-SP — provas anteriores (NucVest)", desc:"A PUC-SP publica um arquivo oficial e gratuito de provas anteriores (2023–2026, inverno e verão) com gabarito, hospedado pela NucVest, a processadora do seu vestibular. Não é o que a versão anterior deste app dizia.", url:"https://www.nucvest.com.br/pucsp/vestibular/2027/verao/index.html", tag:"oficial"},
-  {name:"FGV — provas e gabaritos", desc:"O portal oficial do vestibular FGV tem uma seção própria (Processo Seletivo → Materiais Importantes → Provas e Gabaritos) com provas anteriores gratuitas. Também não era o caso na versão anterior deste app.", url:"https://vestibular.fgv.br/", tag:"oficial"},
+  {name:"FGV — provas e gabaritos", desc:"Página direta de Provas e Gabaritos (escolha o curso para ver os arquivos disponíveis) — não mais a página inicial do vestibular.", url:"https://vestibular.fgv.br/provas-gabaritos", tag:"oficial"},
   {name:"Mackenzie — gabaritos oficiais, arquivo disperso (não é uma página única)", desc:"Segunda verificação (22/ago/2026) encontrou o que a primeira não achou: o Mackenzie publica gabaritos oficiais em mackenzie.br para Higienópolis e para o campus de Curitiba (FEMPAR/Medicina), voltando a pelo menos 2021 — dentro da janela de 5 anos. Continua sem uma página de arquivo única como a da PUC-SP ou FGV, só PDFs soltos por semestre.", url:"https://www.mackenzie.br/fileadmin/ARQUIVOS/Public/2-processos-seletivos/upm/VESTIBULAR_REGULAR/2025/2025_2/Gabarito_-_Prova_B_-_Higien%C3%B3polis_-_2025_2__semestre_-_Vestibular_-_11.06.25.pdf", tag:"oficial"},
   {name:"FAAP — provas e gabaritos, arquivo disperso (não é uma página única)", desc:"A FAAP publica provas e gabaritos oficiais em vestibular.faap.br, mas como PDFs soltos por data de prova, não uma página de arquivo organizada como a da PUC-SP ou da FGV — confirmamos pelo menos nov/2023 e jun/2019 nesta verificação, o que já cobre a janela de até 5 anos. Vale procurar por 'gabarito vestibular FAAP [ano]' direto no site oficial.", url:"https://vestibular.faap.br/", tag:"oficial"},
   {name:"São Camilo — sem arquivo oficial gratuito encontrado", desc:"Segunda verificação (22/ago/2026): o site institucional segue bloqueando acesso automatizado, e conferimos também o portal da VUNESP (processadora do vestibular de Medicina) — sem uma seção de provas anteriores por instituição. Duas tentativas, mesmo resultado: continua sem fonte oficial gratuita confirmada.", url:"https://saocamilo-sp.br/", tag:"gap"},
@@ -559,6 +682,9 @@ let dailyStudyLog = {};      // {"2026-8-22": minutesStudiedThatDay, ...} — wh
 let currentUser = null;      // {id, email, name, role} once signed in via Supabase — null while on the auth screen
 let authMode = 'signup';     // 'signup' | 'login' — which form the auth overlay step is showing
 let capturedBirthdate = null; // from the age-gate step, synced to the profile once auth + onboarding both finish
+let selfScores = {};         // {"progId::stepIndex": "720"} — student's own self-corrected estimate for a
+                              // "Resultado" step, since official results (ENEM/vestibular) only come out
+                              // months later and students correct against a gabarito in the meantime
 
 const XP_PER_LEVEL = 200;
 
@@ -579,7 +705,7 @@ function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       shortlist, checklistState, xp, streak, studiedToday,
       subjects: subjects.map(s => ({name: s.name, color: s.color, minutes: s.minutes})),
-      expandedTrilha, onboardingComplete, lastActiveDate, dailyStudyLog
+      expandedTrilha, onboardingComplete, lastActiveDate, dailyStudyLog, selfScores
     }));
   } catch (e) {
     // private browsing / storage disabled / quota full — app keeps working, just won't remember
@@ -603,6 +729,7 @@ function loadState() {
     if (data.onboardingComplete) onboardingComplete = true;
     if (typeof data.lastActiveDate === 'string') lastActiveDate = data.lastActiveDate;
     if (data.dailyStudyLog && typeof data.dailyStudyLog === 'object') dailyStudyLog = data.dailyStudyLog;
+    if (data.selfScores && typeof data.selfScores === 'object') selfScores = data.selfScores;
   } catch (e) {
     // corrupted saved state — start fresh rather than crash the app
   }
@@ -671,6 +798,7 @@ function switchView(name) {
   if (name === 'inicio') { renderTrilha(); renderDeadlines(); }
   if (name === 'estudar') { renderPresetChips(); renderSubjects(); renderStudyCalendar(); }
   if (name === 'simulados') renderSimulados();
+  if (name === 'sat') renderSatDates();
   if (name === 'admin') renderAdmin();
   track('view_change', { view: name });
 }
@@ -702,6 +830,108 @@ function clearSearch() {
   searchTerm = '';
   document.getElementById('clearSearchBtn').style.display = 'none';
   renderProgramList();
+}
+
+// ---------- "REQUEST A MISSING COLLEGE" ----------
+function toggleRequestForm() {
+  const form = document.getElementById('requestForm');
+  const collapsed = document.getElementById('requestCollapsed');
+  const opening = form.style.display === 'none';
+  form.style.display = opening ? '' : 'none';
+  collapsed.style.display = opening ? 'none' : '';
+}
+
+async function submitCollegeRequest() {
+  const college = document.getElementById('reqCollege').value.trim();
+  const course = document.getElementById('reqCourse').value.trim();
+  const location = document.getElementById('reqLocation').value.trim();
+  const msg = document.getElementById('requestMsg');
+  msg.className = 'request-msg';
+  if (!college) {
+    msg.textContent = 'Escreva pelo menos o nome da faculdade.';
+    msg.classList.add('err');
+    msg.style.display = 'block';
+    return;
+  }
+  if (!currentUser || !sb) {
+    msg.textContent = 'Entre na sua conta para enviar um pedido.';
+    msg.classList.add('err');
+    msg.style.display = 'block';
+    return;
+  }
+  const btn = document.getElementById('requestSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+  try {
+    const { error } = await sb.from('events').insert({
+      user_id: currentUser.id,
+      event_type: 'college_request',
+      payload: { college, course: course || null, location: location || null }
+    });
+    if (error) throw error;
+    msg.textContent = 'Pedido enviado! Vamos olhar isso.';
+    msg.classList.add('ok');
+    msg.style.display = 'block';
+    document.getElementById('reqCollege').value = '';
+    document.getElementById('reqCourse').value = '';
+    document.getElementById('reqLocation').value = '';
+    setTimeout(() => { toggleRequestForm(); msg.style.display = 'none'; }, 1800);
+  } catch (e) {
+    msg.textContent = 'Não foi possível enviar agora. Tente de novo em instantes.';
+    msg.classList.add('err');
+    msg.style.display = 'block';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Enviar pedido';
+}
+
+// ---------- FEEDBACK ----------
+function openFeedback() {
+  document.getElementById('feedbackOverlay').style.display = 'flex';
+  document.getElementById('feedbackMsg').style.display = 'none';
+}
+function closeFeedback() {
+  document.getElementById('feedbackOverlay').style.display = 'none';
+}
+async function submitFeedback() {
+  const type = document.getElementById('feedbackType').value;
+  const message = document.getElementById('feedbackMessage').value.trim();
+  const msg = document.getElementById('feedbackMsg');
+  msg.className = 'request-msg';
+  if (!message) {
+    msg.textContent = 'Escreva sua mensagem antes de enviar.';
+    msg.classList.add('err');
+    msg.style.display = 'block';
+    return;
+  }
+  if (!currentUser || !sb) {
+    msg.textContent = 'Entre na sua conta para enviar feedback.';
+    msg.classList.add('err');
+    msg.style.display = 'block';
+    return;
+  }
+  const btn = document.getElementById('feedbackSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+  try {
+    const { error } = await sb.from('events').insert({
+      user_id: currentUser.id,
+      event_type: 'feedback',
+      payload: { type, message }
+    });
+    if (error) throw error;
+    msg.textContent = 'Enviado! Obrigado por avisar.';
+    msg.classList.add('ok');
+    msg.style.display = 'block';
+    document.getElementById('feedbackMessage').value = '';
+    setTimeout(closeFeedback, 1500);
+  } catch (e) {
+    msg.textContent = 'Não foi possível enviar agora. Tente de novo em instantes.';
+    msg.classList.add('err');
+    msg.style.display = 'block';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Enviar';
 }
 
 function renderProgramList() {
@@ -744,6 +974,7 @@ function renderProgramList() {
         <span class="tag">${getDeadlineTag(p)}</span>
       </div>
       ${note ? `<div class="verified-note">${note}</div>` : ''}
+      ${p.altEntry && p.altEntry.length ? `<div class="alt-entry"><span class="alt-entry-label">Outras formas de entrar:</span> ${p.altEntry.join(' · ')}</div>` : ''}
       <a class="link-btn outline" href="${getSourceUrl(p)}" target="_blank" rel="noopener">Inscrição oficial ↗</a>
     </div>`;
   }).join('');
@@ -836,17 +1067,29 @@ function toggleTrilhaExpand(progId) {
 // ---------- INÍCIO: DEADLINES ----------
 function renderDeadlines() {
   const box = document.getElementById('deadlineBox');
+  // Pinned anchors: ENEM and Fuvest are reference points almost every SP student tracks
+  // regardless of what's in their own trilha, so they always show up first — then the
+  // student's own shortlisted (or, with nothing shortlisted yet, soonest) courses follow.
+  const FUVEST_ANCHOR = PROGRAMS.find(p => p.id === 1);
   const items = (shortlist.length
     ? PROGRAMS.filter(p => shortlist.includes(p.id))
     : [...PROGRAMS].filter(p => p.deadlineDate).sort((a,b) => getDaysLeft(a) - getDaysLeft(b)).slice(0,3)
-  ).map(p => ({p, days: getDaysLeft(p)})).sort((a,b) => (a.days ?? Infinity) - (b.days ?? Infinity));
+  ).filter(p => !FUVEST_ANCHOR || p.id !== FUVEST_ANCHOR.id)
+   .map(p => ({p, days: getDaysLeft(p)})).sort((a,b) => (a.days ?? Infinity) - (b.days ?? Infinity));
   const enemCard = `
     <div class="deadline-card urgent">
       <div class="deadline-days">${daysUntil(ENEM_INFO.deadlineDate)}<span> dias</span></div>
       <div class="deadline-name">${ENEM_INFO.deadlineLabel}</div>
       <div class="deadline-type">✓ ${ENEM_INFO.label} — verificado</div>
     </div>`;
-  box.innerHTML = enemCard + items.map(({p, days}) => {
+  const fuvestDays = FUVEST_ANCHOR ? getDaysLeft(FUVEST_ANCHOR) : null;
+  const fuvestCard = (FUVEST_ANCHOR && fuvestDays !== null && fuvestDays >= 0) ? `
+    <div class="deadline-card ${fuvestDays <= 5 ? 'urgent' : ''}">
+      <div class="deadline-days">${fuvestDays}<span> dias</span></div>
+      <div class="deadline-name">${FUVEST_ANCHOR.deadlineLabel} — Fuvest (USP)</div>
+      <div class="deadline-type">✓ Vestibular — verificado</div>
+    </div>` : '';
+  box.innerHTML = enemCard + fuvestCard + items.map(({p, days}) => {
     const marker = {official:'✓ ', thirdparty:'🔍 ', example:''}[p.tier] || '';
     const daysBlock = days === null
       ? `<div class="deadline-days" style="font-size:12.5px; line-height:1.3">aguardando<br>edital</div>`
@@ -877,11 +1120,20 @@ function renderChecklist() {
     return `<div class="checklist-group">
       <div class="checklist-group-title">${prog.name} — ${prog.inst}</div>
       <div class="checklist-group-sub">${doneCount}/${steps.length} concluído · ${prog.exam.replace('_',' ')}</div>
-      ${steps.map((label, i) => `
+      ${steps.map((label, i) => {
+        const isResult = label.includes('Resultado');
+        const scoreKey = `${id}::${i}`;
+        return `
         <div class="check-row">
           <div class="checkbox ${checks[i]?'checked':''}" onclick="toggleCheck(${id}, ${i})">${checks[i] ? '✓' : ''}</div>
           <div class="check-label ${checks[i]?'done':''}">${label}</div>
-        </div>`).join('')}
+        </div>
+        ${isResult ? `
+        <div class="self-score-row">
+          <span class="self-score-label">Minha nota (autocorrigida)</span>
+          <input type="text" inputmode="decimal" class="self-score-input" placeholder="Ex: 720" value="${selfScores[scoreKey] || ''}" onchange="updateSelfScore(${id}, ${i}, '${label.replace(/'/g,"\\'")}', this.value)">
+        </div>` : ''}`;
+      }).join('')}
       <a class="link-btn" href="${getSourceUrl(prog)}" target="_blank" rel="noopener">Ir para inscrição / pagamento ↗</a>
     </div>`;
   }).join('');
@@ -896,6 +1148,19 @@ function toggleCheck(progId, i) {
   renderChecklist();
   renderTrilha();
   saveState();
+}
+
+function updateSelfScore(progId, i, stepLabel, value) {
+  const key = `${progId}::${i}`;
+  value = (value || '').trim();
+  if (value) {
+    selfScores[key] = value;
+  } else {
+    delete selfScores[key]; // cleared the field — don't keep a stale/empty entry
+  }
+  saveState();
+  const prog = PROGRAMS.find(p => p.id === progId);
+  track('self_score_update', { programId: progId, programName: prog && prog.name, stepLabel, score: value || null });
 }
 
 // ---------- ESTUDAR ----------
@@ -1029,6 +1294,88 @@ function renderSimulados() {
     </div>`).join('');
 }
 
+// ---------- SAT / US COLLEGES ----------
+// Datas confirmadas direto em satsuite.collegeboard.org/sat/dates-deadlines (verificado 2/set/2026).
+const SAT_DATES = [
+  { date: "2026-09-12", reg: "2026-08-28", late: "2026-09-01" },
+  { date: "2026-10-03", reg: "2026-09-18", late: "2026-09-22" },
+  { date: "2026-11-07", reg: "2026-10-23", late: "2026-10-27" },
+  { date: "2026-12-05", reg: "2026-11-20", late: "2026-11-24" },
+  { date: "2027-03-06", reg: "2027-02-19", late: "2027-02-23" },
+  { date: "2027-05-01", reg: "2027-04-16", late: "2027-04-20" },
+  { date: "2027-06-05", reg: "2027-05-21", late: "2027-05-25" },
+];
+function formatSatDate(dateStr) {
+  const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+function renderSatDates() {
+  const box = document.getElementById('satDatesBox');
+  if (!box) return;
+  const upcoming = SAT_DATES.filter(s => daysUntil(s.date) >= 0);
+  box.innerHTML = (upcoming.length ? upcoming : SAT_DATES).map(s => {
+    const days = daysUntil(s.date);
+    return `<div class="sat-date-row">
+      <div>
+        <div class="sat-date-main">${formatSatDate(s.date)}</div>
+        <div class="sat-date-sub">inscrição até ${formatSatDate(s.reg)} · tardia até ${formatSatDate(s.late)}</div>
+      </div>
+      <div class="sat-date-days">${days >= 0 ? days + 'd' : 'encerrado'}</div>
+    </div>`;
+  }).join('');
+}
+
+// DEMO_KEY is College Scorecard's public, rate-limited demo key (shared by everyone who
+// doesn't register their own). Swap in a free key from
+// collegescorecard.ed.gov/data/api-documentation/ for real classroom-scale usage.
+const COLLEGE_SCORECARD_KEY = 'DEMO_KEY';
+const OWNERSHIP_LABEL = { 1: 'pública', 2: 'privada sem fins lucrativos', 3: 'privada com fins lucrativos' };
+
+async function searchColleges() {
+  const name = document.getElementById('collegeSearchInput').value.trim();
+  const state = document.getElementById('collegeStateSelect').value;
+  const box = document.getElementById('collegeResultsBox');
+  if (!name && !state) { box.innerHTML = '<div class="empty">Digite um nome ou escolha um estado para buscar.</div>'; return; }
+  box.innerHTML = '<div class="empty">Buscando...</div>';
+  track('sat_college_search', { name, state });
+  const params = new URLSearchParams({
+    api_key: COLLEGE_SCORECARD_KEY,
+    per_page: '15',
+    fields: 'id,school.name,school.city,school.state,school.school_url,school.ownership,latest.student.size,latest.cost.tuition.in_state,latest.cost.tuition.out_of_state,latest.admissions.admission_rate.overall',
+  });
+  if (name) params.set('school.name', name);
+  if (state) params.set('school.state', state);
+  try {
+    const res = await fetch('https://api.data.gov/ed/collegescorecard/v1/schools?' + params.toString());
+    if (!res.ok) throw new Error('http ' + res.status);
+    const data = await res.json();
+    const results = data.results || [];
+    if (!results.length) { box.innerHTML = '<div class="empty">Nenhuma faculdade encontrada.</div>'; return; }
+    box.innerHTML = results.map(r => {
+      const tuitionIn = r['latest.cost.tuition.in_state'];
+      const tuitionOut = r['latest.cost.tuition.out_of_state'];
+      const rate = r['latest.admissions.admission_rate.overall'];
+      const size = r['latest.student.size'];
+      const own = OWNERSHIP_LABEL[r['school.ownership']] || '';
+      const url = r['school.school_url'] ? 'https://' + r['school.school_url'].replace(/^https?:\/\//, '') : '';
+      return `<div class="simulado-card">
+        <span class="verify-badge verified">✓ oficial — College Scorecard</span>
+        <div class="simulado-name" style="margin-top:8px">${r['school.name']}</div>
+        <div class="simulado-desc">${r['school.city']}, ${r['school.state']}${own ? ' · ' + own : ''}${size ? ' · ' + size.toLocaleString('pt-BR') + ' alunos' : ''}</div>
+        <div class="admin-row-meta">
+          ${rate != null ? `<span class="tag">admissão ${Math.round(rate * 100)}%</span>` : ''}
+          ${tuitionIn != null ? `<span class="tag">in-state $${tuitionIn.toLocaleString('en-US')}</span>` : ''}
+          ${tuitionOut != null ? `<span class="tag">out-of-state $${tuitionOut.toLocaleString('en-US')}</span>` : ''}
+        </div>
+        ${url ? `<a class="link-btn outline" href="${url}" target="_blank" rel="noopener">Site oficial ↗</a>` : ''}
+      </div>`;
+    }).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="empty">Não foi possível buscar agora (a chave de demonstração da API tem limite baixo — tente de novo em alguns minutos).</div>';
+  }
+}
+
 // ---------- ONBOARDING / AGE-GATE (LGPD, §15 do doc) ----------
 const TODAY = new Date(); // real "today" — age-gate must reflect the actual date, not a frozen demo date
 const AGE_GATE_THRESHOLD = 16; // confirmed in doc §15: 16+ no parental component, <16 full gate
@@ -1101,6 +1448,7 @@ function authToggleMode() {
   document.getElementById('authSubmitBtn').textContent = authMode === 'signup' ? 'Criar conta' : 'Entrar';
   document.getElementById('authSwitchLink').textContent = authMode === 'signup' ? 'Já tem conta? Entrar' : 'Não tem conta? Criar';
   document.getElementById('authNameField').style.display = authMode === 'signup' ? '' : 'none';
+  document.getElementById('authSchoolField').style.display = authMode === 'signup' ? '' : 'none';
   document.getElementById('authError').style.display = 'none';
 }
 
@@ -1118,20 +1466,22 @@ async function authSubmit() {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   const name = document.getElementById('authName').value.trim();
+  const school = document.getElementById('authSchool').value.trim();
   const errBox = document.getElementById('authError');
   errBox.style.display = 'none';
   if (!sb) { errBox.textContent = 'Não foi possível carregar o sistema de contas. Recarregue a página.'; errBox.style.display = 'block'; return; }
   if (!email || !password) { errBox.textContent = 'Preencha e-mail e senha.'; errBox.style.display = 'block'; return; }
   if (authMode === 'signup' && !name) { errBox.textContent = 'Preencha seu nome.'; errBox.style.display = 'block'; return; }
+  if (authMode === 'signup' && !school) { errBox.textContent = 'Preencha o nome da sua escola.'; errBox.style.display = 'block'; return; }
   const btn = document.getElementById('authSubmitBtn');
   btn.disabled = true;
   btn.textContent = 'Aguarde...';
   try {
     if (authMode === 'signup') {
-      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } });
+      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name, school } } });
       if (error) throw error;
       if (!data.user) throw new Error('Verifique seu e-mail para confirmar a conta antes de entrar.');
-      await afterAuth(data.user, name);
+      await afterAuth(data.user, name, school);
     } else {
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -1145,21 +1495,34 @@ async function authSubmit() {
   }
 }
 
-async function afterAuth(user, nameFromForm) {
-  currentUser = { id: user.id, email: user.email, name: nameFromForm || (user.user_metadata && user.user_metadata.name) || '', role: 'student' };
+async function afterAuth(user, nameFromForm, schoolFromForm) {
+  currentUser = {
+    id: user.id, email: user.email,
+    name: nameFromForm || (user.user_metadata && user.user_metadata.name) || '',
+    school: schoolFromForm || (user.user_metadata && user.user_metadata.school) || '',
+    role: 'student'
+  };
   try {
     const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
     if (profile) {
       currentUser.role = profile.role || 'student';
       currentUser.name = currentUser.name || profile.name || '';
+      currentUser.school = currentUser.school || profile.school || '';
       if (profile.onboarding_complete) onboardingComplete = true;
+    } else {
+      // No profile row for a valid, logged-in user — either the signup trigger hasn't fired
+      // yet, or an admin "removed" this student earlier (that only deletes the row, not the
+      // login). Recreate it from what we already know client-side so the account isn't left
+      // stuck with no row for RLS-gated inserts or admin visibility to attach to.
+      sb.from('profiles').insert({ id: user.id, email: user.email, name: currentUser.name, school: currentUser.school, role: 'student' })
+        .then(() => {}).catch(() => {});
     }
   } catch (e) {
     // profile row may not exist yet (trigger race) or the fetch failed — app still works,
     // just falls back to treating this as a fresh student until the next load
   }
   document.getElementById('greetingName').textContent = currentUser.name ? currentUser.name.split(' ')[0] : 'estudante';
-  document.getElementById('logoutLink').style.display = '';
+  document.getElementById('headerLinks').style.display = '';
   document.getElementById('adminNavItem').style.display = currentUser.role === 'admin' ? '' : 'none';
   track('login', { mode: authMode });
   saveState();
@@ -1219,7 +1582,10 @@ async function renderAdmin() {
       .reduce((sum, e) => sum + ((e.payload && e.payload.sessionMinutes) || 0), 0);
 
     const perUser = {};
-    students.forEach(p => { perUser[p.id] = { name: p.name || p.email || '(sem nome)', email: p.email, lastActive: null, shortlisted: 0, checklistDone: 0, studyMinutes: 0 }; });
+    students.forEach(p => { perUser[p.id] = { id: p.id, name: p.name || p.email || '(sem nome)', email: p.email, school: p.school || '', lastActive: null, shortlisted: 0, checklistDone: 0, studyMinutes: 0 }; });
+    const schoolCount = new Set(students.map(p => (p.school || '').trim().toLowerCase()).filter(Boolean)).size;
+    const onboardedCount = students.filter(p => p.onboarding_complete).length;
+    const onboardingRate = students.length ? Math.round((onboardedCount / students.length) * 100) : 0;
     (events || []).forEach(e => {
       const u = perUser[e.user_id];
       if (!u) return; // admin's own events, or a since-deleted profile
@@ -1232,30 +1598,170 @@ async function renderAdmin() {
 
     const rows = Object.values(perUser).sort((a, b) => new Date(b.lastActive || 0) - new Date(a.lastActive || 0));
 
+    const profileById = {};
+    (profiles || []).forEach(p => { profileById[p.id] = p; });
+    const collegeRequests = (events || [])
+      .filter(e => e.event_type === 'college_request')
+      .map(e => ({
+        name: (profileById[e.user_id] && (profileById[e.user_id].name || profileById[e.user_id].email)) || '(aluno desconhecido)',
+        college: e.payload && e.payload.college,
+        course: e.payload && e.payload.course,
+        location: e.payload && e.payload.location,
+        date: e.created_at
+      }));
+
+    // events are already ordered newest-first (see the query above), so the first occurrence
+    // per student+program+step we hit here is that student's latest self-corrected value —
+    // an older update for the same step is superseded, not a separate row.
+    const seenScoreKeys = new Set();
+    const selfScoreRows = [];
+    (events || []).forEach(e => {
+      if (e.event_type !== 'self_score_update' || !e.payload || !e.payload.score) return;
+      const key = e.user_id + '::' + e.payload.programId + '::' + e.payload.stepLabel;
+      if (seenScoreKeys.has(key)) return;
+      seenScoreKeys.add(key);
+      selfScoreRows.push({
+        name: (profileById[e.user_id] && (profileById[e.user_id].name || profileById[e.user_id].email)) || '(aluno desconhecido)',
+        programName: e.payload.programName || '—',
+        stepLabel: e.payload.stepLabel || '—',
+        score: e.payload.score,
+        date: e.created_at
+      });
+    });
+
+    const feedbackRows = (events || [])
+      .filter(e => e.event_type === 'feedback' && e.payload && e.payload.message)
+      .map(e => ({
+        name: (profileById[e.user_id] && (profileById[e.user_id].name || profileById[e.user_id].email)) || '(aluno desconhecido)',
+        type: (e.payload && e.payload.type) || 'outro',
+        message: e.payload.message,
+        date: e.created_at
+      }));
+    const feedbackTypeLabel = { sugestao: 'Sugestão', problema: 'Problema técnico', duvida: 'Dúvida', outro: 'Outro' };
+
+    // Referenced by the "Remover"/"Zerar atividade" button handlers below — keeps their
+    // onclick markup free of user-supplied text (names can contain quotes/accents that would
+    // be awkward to escape safely inline).
+    adminUserMap = {};
+    rows.forEach(u => { adminUserMap[u.id] = u; });
+
     box.innerHTML = `
       <div class="admin-stat-grid">
         <div class="admin-stat-tile"><div class="admin-stat-num">${students.length}</div><div class="admin-stat-label">Alunos cadastrados</div></div>
         <div class="admin-stat-tile"><div class="admin-stat-num">${activeUserIds.size}</div><div class="admin-stat-label">Ativos nos últimos 7 dias</div></div>
         <div class="admin-stat-tile"><div class="admin-stat-num">${Math.round(studyMinutesWeek)}</div><div class="admin-stat-label">Minutos estudados essa semana</div></div>
         <div class="admin-stat-tile"><div class="admin-stat-num">${checklistDone}</div><div class="admin-stat-label">Passos de checklist concluídos</div></div>
+        <div class="admin-stat-tile"><div class="admin-stat-num">${schoolCount}</div><div class="admin-stat-label">Escolas representadas</div></div>
+        <div class="admin-stat-tile"><div class="admin-stat-num">${onboardingRate}%</div><div class="admin-stat-label">Onboarding concluído</div></div>
+        <div class="admin-stat-tile"><div class="admin-stat-num">${collegeRequests.length}</div><div class="admin-stat-label">Faculdades pedidas</div></div>
+        <div class="admin-stat-tile"><div class="admin-stat-num">${selfScoreRows.length}</div><div class="admin-stat-label">Notas autocorrigidas</div></div>
+        <div class="admin-stat-tile"><div class="admin-stat-num">${feedbackRows.length}</div><div class="admin-stat-label">Feedbacks recebidos</div></div>
       </div>
       <div style="overflow-x:auto">
         <table class="admin-table">
-          <thead><tr><th>Aluno</th><th>Última atividade</th><th>Trilha</th><th>Checklist</th><th>Min. estudo</th></tr></thead>
+          <thead><tr><th>Aluno</th><th>Escola</th><th>Última atividade</th><th>Trilha</th><th>Checklist</th><th>Min. estudo</th><th>Ações</th></tr></thead>
           <tbody>
-            ${rows.length === 0 ? '<tr><td colspan="5" style="text-align:center; color:var(--text-faint)">Ninguém usou o app ainda.</td></tr>' : rows.map(u => `
+            ${rows.length === 0 ? '<tr><td colspan="7" style="text-align:center; color:var(--text-faint)">Ninguém usou o app ainda.</td></tr>' : rows.map(u => `
               <tr>
                 <td>${u.name}<br><span style="color:var(--text-faint); font-size:10.5px">${u.email || ''}</span></td>
+                <td>${u.school || '—'}</td>
                 <td>${u.lastActive ? new Date(u.lastActive).toLocaleDateString('pt-BR') : '—'}</td>
                 <td>${u.shortlisted}</td>
                 <td>${u.checklistDone}</td>
                 <td>${Math.round(u.studyMinutes)}</td>
+                <td>
+                  <button class="admin-action-btn" onclick="adminResetActivity('${u.id}')">Zerar</button>
+                  <button class="admin-action-btn danger" onclick="adminRemoveStudent('${u.id}')">Remover</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="admin-loading" style="padding:6px 0 18px; text-align:left">"Zerar" apaga só o histórico deste painel — não mexe no progresso salvo no celular do aluno. "Remover" apaga o perfil e o histórico; o login continua ativo e um perfil novo é criado sozinho se o aluno entrar de novo.</div>
+      <div class="section-label">Faculdades/cursos pedidos por alunos (${collegeRequests.length})</div>
+      <div style="overflow-x:auto">
+        <table class="admin-table">
+          <thead><tr><th>Aluno</th><th>Faculdade</th><th>Curso</th><th>Local</th><th>Data</th></tr></thead>
+          <tbody>
+            ${collegeRequests.length === 0 ? '<tr><td colspan="5" style="text-align:center; color:var(--text-faint)">Nenhum pedido ainda.</td></tr>' : collegeRequests.map(r => `
+              <tr>
+                <td>${r.name}</td>
+                <td>${r.college || '—'}</td>
+                <td>${r.course || '—'}</td>
+                <td>${r.location || '—'}</td>
+                <td>${new Date(r.date).toLocaleDateString('pt-BR')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="section-label">Notas autocorrigidas (${selfScoreRows.length})</div>
+      <div style="overflow-x:auto">
+        <table class="admin-table">
+          <thead><tr><th>Aluno</th><th>Curso</th><th>Etapa</th><th>Nota</th><th>Atualizado</th></tr></thead>
+          <tbody>
+            ${selfScoreRows.length === 0 ? '<tr><td colspan="5" style="text-align:center; color:var(--text-faint)">Nenhuma nota registrada ainda.</td></tr>' : selfScoreRows.map(r => `
+              <tr>
+                <td>${r.name}</td>
+                <td>${r.programName}</td>
+                <td>${r.stepLabel}</td>
+                <td>${r.score}</td>
+                <td>${new Date(r.date).toLocaleDateString('pt-BR')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="section-label">Feedback dos alunos (${feedbackRows.length})</div>
+      <div style="overflow-x:auto">
+        <table class="admin-table">
+          <thead><tr><th>Aluno</th><th>Tipo</th><th>Mensagem</th><th>Data</th></tr></thead>
+          <tbody>
+            ${feedbackRows.length === 0 ? '<tr><td colspan="4" style="text-align:center; color:var(--text-faint)">Nenhum feedback ainda.</td></tr>' : feedbackRows.map(r => `
+              <tr>
+                <td>${r.name}</td>
+                <td class="admin-fb-type">${feedbackTypeLabel[r.type] || r.type}</td>
+                <td class="admin-fb-msg">${r.message}</td>
+                <td>${new Date(r.date).toLocaleDateString('pt-BR')}</td>
               </tr>`).join('')}
           </tbody>
         </table>
       </div>`;
   } catch (e) {
     box.innerHTML = '<div class="admin-loading">Não foi possível carregar o painel agora. Verifique sua conexão e tente de novo.</div>';
+  }
+}
+
+// perUser rows keyed by id, refreshed on every renderAdmin() — lets the remove/reset button
+// handlers below look up a student's display name for the confirm() prompt without needing
+// to embed user-supplied text (quotes, accents) directly into onclick markup.
+let adminUserMap = {};
+
+async function adminResetActivity(userId) {
+  const u = adminUserMap[userId];
+  const label = u ? u.name : 'este aluno';
+  if (!confirm(`Zerar o histórico de atividade de ${label} neste painel?\n\nIsso apaga os eventos registrados aqui (checklist, estudo, notas, pedidos, feedback). O progresso salvo no celular do aluno não é afetado.`)) return;
+  try {
+    const { error } = await sb.from('events').delete().eq('user_id', userId);
+    if (error) throw error;
+    renderAdmin();
+  } catch (e) {
+    alert('Não foi possível zerar a atividade agora. Tente de novo em instantes.');
+  }
+}
+
+async function adminRemoveStudent(userId) {
+  const u = adminUserMap[userId];
+  const label = u ? u.name : 'este aluno';
+  if (!confirm(`Remover ${label} do painel?\n\nIsso apaga o perfil e todo o histórico de atividade. O login continua ativo — se o aluno entrar de novo, um perfil novo é criado automaticamente.`)) return;
+  try {
+    // events first: its FK is to auth.users (not profiles), so deleting the profile row
+    // alone would leave orphaned event rows behind with no cascade to clean them up.
+    const { error: evErr } = await sb.from('events').delete().eq('user_id', userId);
+    if (evErr) throw evErr;
+    const { error: profErr } = await sb.from('profiles').delete().eq('id', userId);
+    if (profErr) throw profErr;
+    renderAdmin();
+  } catch (e) {
+    alert('Não foi possível remover o aluno agora. Tente de novo em instantes.');
   }
 }
 
